@@ -92,84 +92,29 @@ After booking, please DM <b>@pixelnailz</b> on Instagram for the e-transfer emai
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-const WEB_APP_URL = "YOUR_WEB_APP_URL_HERE"; // Replace with your Apps Script URL
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyUqh_l2OcpEopSqX_I1uMwCtBf1mdvDxqaBJ46tTzpgnkH9Xdpq0JUfi7RB_6ZEu5E/exec"; // Replace with your Apps Script URL
 
 // Show length field only for Acrylic Full Set
 document.getElementById("service").addEventListener("change", function() {
   const lengthField = document.getElementById("lengthField");
-  if(this.value === "Acrylic Full Set") lengthField.classList.remove("hidden");
+  if (this.value === "Acrylic Full Set") lengthField.classList.remove("hidden");
   else lengthField.classList.add("hidden");
 });
 
 // Allowed September dates
 const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
 
-// Function to fetch booked dates
+// Fetch booked dates
 async function getBookedDates() {
   try {
-    const response = await fetch(WEB_APP_URL + "?action=fetch");
-    const data = await response.json();
+    const res = await fetch(WEB_APP_URL + "?action=fetch");
+    const data = await res.json();
     const booked = data.bookings || [];
-    return booked.map(b => b.date); // list of booked dates
-  } catch(e) {
+    return booked.map(b => b.date);
+  } catch {
     return [];
   }
 }
 
-// Initialize booking datepicker
-async function initBookingDatepicker() {
-  const bookedDates = await getBookedDates();
-  const availableDates = allowedDates.filter(d => !bookedDates.includes(d));
-  flatpickr("#date", { dateFormat:"Y-m-d", enable: availableDates });
-}
-initBookingDatepicker();
-
-// Initialize cancel datepicker
-flatpickr("#cancelDate", { dateFormat:"Y-m-d", enable: allowedDates });
-
-// Booking form submission
-document.getElementById("bookingForm").addEventListener("submit", async function(e){
-  e.preventDefault();
-  const bookingData = {
-    action:"book",
-    name: document.getElementById("name").value,
-    phone: document.getElementById("phone").value,
-    email: document.getElementById("email").value,
-    service: document.getElementById("service").value,
-    length: document.getElementById("service").value==="Acrylic Full Set"? document.getElementById("length").value:"N/A",
-    date: document.getElementById("date").value,
-    time: "12:00 PM" // FIXED to match spreadsheet
-  };
-
-  try {
-    const res = await fetch(WEB_APP_URL, { method:"POST", body:JSON.stringify(bookingData) });
-    const data = await res.json();
-    alert(data.message);
-    if(data.status==="success") await initBookingDatepicker(); // refresh available dates
-  } catch {
-    alert("Error booking appointment");
-  }
-});
-
-// Cancel form submission
-document.getElementById("cancelForm").addEventListener("submit", async function(e){
-  e.preventDefault();
-  const cancelData = {
-    action:"cancel",
-    email: document.getElementById("cancelEmail").value,
-    date: document.getElementById("cancelDate").value,
-    time: "12:00 PM" // FIXED to match spreadsheet
-  };
-
-  try {
-    const res = await fetch(WEB_APP_URL, { method:"POST", body: JSON.stringify(cancelData) });
-    const data = await res.json();
-    alert(data.message);
-    if(data.status==="success") await initBookingDatepicker(); // refresh available dates
-  } catch {
-    alert("Error cancelling appointment");
-  }
-});
-</script>
-</body>
-</html>
+// Initialize booking calendar
+async function initBooking
