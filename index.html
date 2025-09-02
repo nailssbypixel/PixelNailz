@@ -59,7 +59,7 @@ footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; backgr
 
 <label for="time">Time</label>
 <select id="time" required>
-<option value="12:00">12:00 PM</option>
+<option value="12:00 PM">12:00 PM</option>
 </select>
 
 <button type="submit">Book Appointment</button>
@@ -81,7 +81,7 @@ After booking, please DM <b>@pixelnailz</b> on Instagram for the e-transfer emai
 
 <label for="cancelTime">Time</label>
 <select id="cancelTime" required>
-<option value="12:00">12 PM</option>
+<option value="12:00 PM">12:00 PM</option>
 </select>
 
 <button type="submit">Cancel Appointment</button>
@@ -92,12 +92,12 @@ After booking, please DM <b>@pixelnailz</b> on Instagram for the e-transfer emai
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyUqh_l2OcpEopSqX_I1uMwCtBf1mdvDxqaBJ46tTzpgnkH9Xdpq0JUfi7RB_6ZEu5E/exec"; // Replace with your Apps Script URL
+const WEB_APP_URL = "YOUR_WEB_APP_URL_HERE"; // Replace with your Apps Script URL
 
 // Show length field only for Acrylic Full Set
 document.getElementById("service").addEventListener("change", function() {
   const lengthField = document.getElementById("lengthField");
-  if (this.value === "Acrylic Full Set") lengthField.classList.remove("hidden");
+  if(this.value === "Acrylic Full Set") lengthField.classList.remove("hidden");
   else lengthField.classList.add("hidden");
 });
 
@@ -117,51 +117,58 @@ async function getBookedDates() {
 }
 
 // Initialize booking datepicker
-(async () => {
+async function initBookingDatepicker() {
   const bookedDates = await getBookedDates();
   const availableDates = allowedDates.filter(d => !bookedDates.includes(d));
   flatpickr("#date", { dateFormat:"Y-m-d", enable: availableDates });
-})();
+}
+initBookingDatepicker();
 
 // Initialize cancel datepicker
 flatpickr("#cancelDate", { dateFormat:"Y-m-d", enable: allowedDates });
 
-// Booking form
-document.getElementById("bookingForm").addEventListener("submit", function(e) {
-e.preventDefault();
-fetch(WEB_APP_URL, {
-method:"POST",
-body: JSON.stringify({
-action:"book",
-name: document.getElementById("name").value,
-phone: document.getElementById("phone").value,
-email: document.getElementById("email").value,
-service: document.getElementById("service").value,
-length: document.getElementById("service").value==="Acrylic Full Set"? document.getElementById("length").value:"N/A",
-date: document.getElementById("date").value,
-time: "12:00"
-})
-})
-.then(res => res.json())
-.then(data => alert(data.message))
-.catch(()=>alert("Error booking appointment"));
+// Booking form submission
+document.getElementById("bookingForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+  const bookingData = {
+    action:"book",
+    name: document.getElementById("name").value,
+    phone: document.getElementById("phone").value,
+    email: document.getElementById("email").value,
+    service: document.getElementById("service").value,
+    length: document.getElementById("service").value==="Acrylic Full Set"? document.getElementById("length").value:"N/A",
+    date: document.getElementById("date").value,
+    time: "12:00 PM" // FIXED to match spreadsheet
+  };
+
+  try {
+    const res = await fetch(WEB_APP_URL, { method:"POST", body:JSON.stringify(bookingData) });
+    const data = await res.json();
+    alert(data.message);
+    if(data.status==="success") await initBookingDatepicker(); // refresh available dates
+  } catch {
+    alert("Error booking appointment");
+  }
 });
 
-// Cancel form
-document.getElementById("cancelForm").addEventListener("submit", function(e) {
-e.preventDefault();
-fetch(WEB_APP_URL, {
-method:"POST",
-body: JSON.stringify({
-action:"cancel",
-email: document.getElementById("cancelEmail").value,
-date: document.getElementById("cancelDate").value,
-time: "12:00"
-})
-})
-.then(res => res.json())
-.then(data => alert(data.message))
-.catch(()=>alert("Error cancelling appointment"));
+// Cancel form submission
+document.getElementById("cancelForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+  const cancelData = {
+    action:"cancel",
+    email: document.getElementById("cancelEmail").value,
+    date: document.getElementById("cancelDate").value,
+    time: "12:00 PM" // FIXED to match spreadsheet
+  };
+
+  try {
+    const res = await fetch(WEB_APP_URL, { method:"POST", body: JSON.stringify(cancelData) });
+    const data = await res.json();
+    alert(data.message);
+    if(data.status==="success") await initBookingDatepicker(); // refresh available dates
+  } catch {
+    alert("Error cancelling appointment");
+  }
 });
 </script>
 </body>
