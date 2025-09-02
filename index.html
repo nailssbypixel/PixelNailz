@@ -123,28 +123,37 @@ flatpickr("#cancelDate", { dateFormat:"Y-m-d", enable: allowedDates });
 // Booking form submission
 document.getElementById("bookingForm").addEventListener("submit", function(e){
   e.preventDefault();
+
+  const bookingData = {
+    action:"book",
+    name: document.getElementById("name").value,
+    phone: document.getElementById("phone").value,
+    email: document.getElementById("email").value,
+    service: document.getElementById("service").value,
+    length: document.getElementById("service").value === "Acrylic Full Set" ? document.getElementById("length").value : "N/A",
+    date: document.getElementById("date").value,
+    time: "12:00"
+  };
+
   fetch(WEB_APP_URL, {
     method:"POST",
-    body: JSON.stringify({
-      action:"book",
-      name: document.getElementById("name").value,
-      phone: document.getElementById("phone").value,
-      email: document.getElementById("email").value,
-      service: document.getElementById("service").value,
-      length: document.getElementById("service").value === "Acrylic Full Set" ? document.getElementById("length").value : "N/A",
-      date: document.getElementById("date").value,
-      time: "12:00"
-    })
+    body: JSON.stringify(bookingData)
   })
   .then(res => res.json())
-  .then(data => {
+  .then(async data => {
     alert(data.message);
-    // Refresh datepicker after booking
-    (async () => {
-      const bookedDates = await getBookedDates();
+
+    if(data.status === "success") {
+      // Refresh available dates after booking
+      const bookedDates = await getBookedDates(); // fetch updated booked dates
       const availableDates = allowedDates.filter(d => !bookedDates.includes(d));
+
+      // Destroy previous datepicker and recreate with updated available dates
+      const oldPicker = document.querySelector("#date")._flatpickr;
+      if(oldPicker) oldPicker.destroy();
+
       flatpickr("#date", { dateFormat:"Y-m-d", enable: availableDates });
-    })();
+    }
   })
   .catch(()=>alert("Error booking appointment"));
 });
