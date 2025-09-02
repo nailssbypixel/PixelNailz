@@ -5,18 +5,18 @@
 <title>PixelNailz Booking</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
-body { font-family: Arial, sans-serif; background: #f8f8f8; margin:0; padding:0; }
-header { background: #ff66a3; color: white; text-align: center; padding: 1.5rem; font-size: 2rem; font-weight: bold; letter-spacing: 1px; }
-.container { max-width: 600px; margin: 30px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-h2 { text-align: center; color: #d63384; }
-form { display:flex; flex-direction: column; margin-top:20px; }
-label { margin:8px 0 4px; font-weight:bold; }
-input, select, button { padding:10px; border:1px solid #ccc; border-radius:6px; margin-bottom:12px; font-size:1em; }
-button { background:#d63384; color:white; border:none; cursor:pointer; font-weight:bold; }
-button:hover { background:#b82c6d; }
-.note { font-size:0.9em; color:#555; text-align:center; margin:10px 0 20px; }
-.hidden { display:none; }
-footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; background:#f8f8f8; margin-top:40px; }
+body { font-family: Arial, sans-serif; background: #f8f8f8; margin:0; padding:0;}
+header { background: #ff66a3; color:white; text-align:center; padding:1.5rem; font-size:2rem; font-weight:bold; letter-spacing:1px;}
+.container { max-width:600px; margin:30px auto; background:white; padding:25px; border-radius:12px; box-shadow:0 4px 8px rgba(0,0,0,0.1);}
+h2 { text-align:center; color:#d63384;}
+form { display:flex; flex-direction:column; margin-top:20px;}
+label { margin:8px 0 4px; font-weight:bold;}
+input, select, button { padding:10px; border:1px solid #ccc; border-radius:6px; margin-bottom:12px; font-size:1em;}
+button { background:#d63384; color:white; border:none; cursor:pointer; font-weight:bold;}
+button:hover { background:#b82c6d;}
+.note { font-size:0.9em; color:#555; text-align:center; margin:10px 0 20px;}
+.hidden { display:none;}
+footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; background:#f8f8f8; margin-top:40px;}
 </style>
 </head>
 <body>
@@ -58,9 +58,7 @@ footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; backgr
 <input type="text" id="date" placeholder="Select a date" required>
 
 <label for="time">Time</label>
-<select id="time" required>
-<option value="12:00">12 PM</option>
-</select>
+<input type="text" value="12:00" disabled>
 
 <button type="submit">Book Appointment</button>
 </form>
@@ -80,9 +78,7 @@ After booking, please DM <b>@pixelnailz</b> on Instagram for the e-transfer emai
 <input type="text" id="cancelDate" placeholder="Select a date" required>
 
 <label for="cancelTime">Time</label>
-<select id="cancelTime" required>
-<option value="12:00">12 PM</option>
-</select>
+<input type="text" value="12:00" disabled>
 
 <button type="submit">Cancel Appointment</button>
 </form>
@@ -92,44 +88,40 @@ After booking, please DM <b>@pixelnailz</b> on Instagram for the e-transfer emai
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyUqh_l2OcpEopSqX_I1uMwCtBf1mdvDxqaBJ46tTzpgnkH9Xdpq0JUfi7RB_6ZEu5E/exec"; // Replace with your Apps Script URL
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyUqh_l2OcpEopSqX_I1uMwCtBf1mdvDxqaBJ46tTzpgnkH9Xdpq0JUfi7RB_6ZEu5E/exec"; // replace with your Apps Script URL
+const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
 
 // Show length field only for Acrylic Full Set
 document.getElementById("service").addEventListener("change", function() {
   const lengthField = document.getElementById("lengthField");
-  if (this.value === "Acrylic Full Set") lengthField.classList.remove("hidden");
+  if(this.value === "Acrylic Full Set") lengthField.classList.remove("hidden");
   else lengthField.classList.add("hidden");
 });
 
-// Allowed September dates
-const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
-
-// Function to fetch booked dates at 12:00
+// Fetch booked dates (only at 12:00) from Apps Script
 async function getBookedDates() {
   try {
-    const response = await fetch(WEB_APP_URL + "?action=fetch");
-    const data = await response.json();
+    const res = await fetch(WEB_APP_URL + "?action=fetch");
+    const data = await res.json();
     const booked = data.bookings || [];
-    // Only consider dates that already have a booking at 12:00
     return booked.filter(b => b.time === "12:00").map(b => b.date);
   } catch(e) {
     return [];
   }
 }
 
-
-// Initialize booking datepicker with only available dates
+// Initialize booking datepicker
 (async () => {
   const bookedDates = await getBookedDates();
   const availableDates = allowedDates.filter(d => !bookedDates.includes(d));
   flatpickr("#date", { dateFormat:"Y-m-d", enable: availableDates });
 })();
 
-// Initialize cancel datepicker (all allowed dates)
+// Initialize cancel datepicker
 flatpickr("#cancelDate", { dateFormat:"Y-m-d", enable: allowedDates });
 
 // Booking form submission
-document.getElementById("bookingForm").addEventListener("submit", function(e) {
+document.getElementById("bookingForm").addEventListener("submit", function(e){
   e.preventDefault();
   fetch(WEB_APP_URL, {
     method:"POST",
@@ -147,31 +139,31 @@ document.getElementById("bookingForm").addEventListener("submit", function(e) {
   .then(res => res.json())
   .then(data => {
     alert(data.message);
-    // Refresh datepicker so newly booked dates are disabled
+    // Refresh datepicker after booking
     (async () => {
       const bookedDates = await getBookedDates();
       const availableDates = allowedDates.filter(d => !bookedDates.includes(d));
       flatpickr("#date", { dateFormat:"Y-m-d", enable: availableDates });
     })();
   })
-  .catch(() => alert("Error booking appointment"));
+  .catch(()=>alert("Error booking appointment"));
 });
 
-// Cancel form
-document.getElementById("cancelForm").addEventListener("submit", function(e) {
-e.preventDefault();
-fetch(WEB_APP_URL, {
-method:"POST",
-body: JSON.stringify({
-action:"cancel",
-email: document.getElementById("cancelEmail").value,
-date: document.getElementById("cancelDate").value,
-time: "12:00"
-})
-})
-.then(res => res.json())
-.then(data => alert(data.message))
-.catch(()=>alert("Error cancelling appointment"));
+// Cancel form submission
+document.getElementById("cancelForm").addEventListener("submit", function(e){
+  e.preventDefault();
+  fetch(WEB_APP_URL, {
+    method:"POST",
+    body: JSON.stringify({
+      action:"cancel",
+      email: document.getElementById("cancelEmail").value,
+      date: document.getElementById("cancelDate").value,
+      time: "12:00"
+    })
+  })
+  .then(res=>res.json())
+  .then(data=>alert(data.message))
+  .catch(()=>alert("Error cancelling appointment"));
 });
 </script>
 </body>
