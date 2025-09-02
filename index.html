@@ -6,21 +6,20 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
 body { font-family: Arial, sans-serif; background: #f8f8f8; margin:0; padding:0;}
-header { background: #ff66a3; color:white; text-align:center; padding:1.5rem; font-size:2rem; font-weight:bold; letter-spacing:1px;}
+header { background: #ff66a3; color: white; text-align:center; padding:1.5rem; font-size:2rem; font-weight:bold; letter-spacing:1px;}
 .container { max-width:600px; margin:30px auto; background:white; padding:25px; border-radius:12px; box-shadow:0 4px 8px rgba(0,0,0,0.1);}
-h2 { text-align:center; color:#d63384;}
-form { display:flex; flex-direction:column; margin-top:20px;}
-label { margin:8px 0 4px; font-weight:bold;}
-input, select, button { padding:10px; border:1px solid #ccc; border-radius:6px; margin-bottom:12px; font-size:1em;}
-button { background:#d63384; color:white; border:none; cursor:pointer; font-weight:bold;}
-button:hover { background:#b82c6d;}
-.note { font-size:0.9em; color:#555; text-align:center; margin:10px 0 20px;}
-.hidden { display:none;}
-footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; background:#f8f8f8; margin-top:40px;}
+h2 { text-align:center; color:#d63384; }
+form { display:flex; flex-direction:column; margin-top:20px; }
+label { margin:8px 0 4px; font-weight:bold; }
+input, select, button { padding:10px; border:1px solid #ccc; border-radius:6px; margin-bottom:12px; font-size:1em; }
+button { background:#d63384; color:white; border:none; cursor:pointer; font-weight:bold; }
+button:hover { background:#b82c6d; }
+.note { font-size:0.9em; color:#555; text-align:center; margin:10px 0 20px; }
+.hidden { display:none; }
+footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; background:#f8f8f8; margin-top:40px; }
 </style>
 </head>
 <body>
-
 <header>PixelNailz Booking</header>
 
 <div class="container" id="bookContainer">
@@ -28,13 +27,10 @@ footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; backgr
 <form id="bookingForm">
 <label for="name">Full Name</label>
 <input type="text" id="name" required>
-
 <label for="phone">Phone Number</label>
 <input type="tel" id="phone" required>
-
 <label for="email">Email</label>
 <input type="email" id="email" required>
-
 <label for="service">Service</label>
 <select id="service" required>
 <option value="">Select a service</option>
@@ -58,11 +54,12 @@ footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; backgr
 <input type="text" id="date" placeholder="Select a date" required>
 
 <label for="time">Time</label>
-<input type="text" value="12:00" disabled>
+<select id="time" required>
+<option value="12:00">12 PM</option>
+</select>
 
 <button type="submit">Book Appointment</button>
 </form>
-
 <div class="note">
 After booking, please DM <b>@pixelnailz</b> on Instagram for the e-transfer email and to send your inspo pic 💖
 </div>
@@ -73,13 +70,12 @@ After booking, please DM <b>@pixelnailz</b> on Instagram for the e-transfer emai
 <form id="cancelForm">
 <label for="cancelEmail">Email</label>
 <input type="email" id="cancelEmail" required>
-
 <label for="cancelDate">Date</label>
 <input type="text" id="cancelDate" placeholder="Select a date" required>
-
 <label for="cancelTime">Time</label>
-<input type="text" value="12:00" disabled>
-
+<select id="cancelTime" required>
+<option value="12:00">12 PM</option>
+</select>
 <button type="submit">Cancel Appointment</button>
 </form>
 </div>
@@ -88,7 +84,9 @@ After booking, please DM <b>@pixelnailz</b> on Instagram for the e-transfer emai
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyUqh_l2OcpEopSqX_I1uMwCtBf1mdvDxqaBJ46tTzpgnkH9Xdpq0JUfi7RB_6ZEu5E/exec"; // replace with your Apps Script URL
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyUqh_l2OcpEopSqX_I1uMwCtBf1mdvDxqaBJ46tTzpgnkH9Xdpq0JUfi7RB_6ZEu5E/exec"; // Replace with your Apps Script URL
+
+// Allowed September dates
 const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
 
 // Show length field only for Acrylic Full Set
@@ -98,81 +96,75 @@ document.getElementById("service").addEventListener("change", function() {
   else lengthField.classList.add("hidden");
 });
 
-// Fetch booked dates (only at 12:00) from Apps Script
+// Fetch booked dates from Apps Script
 async function getBookedDates() {
   try {
-    const res = await fetch(WEB_APP_URL + "?action=fetch");
-    const data = await res.json();
+    const response = await fetch(WEB_APP_URL + "?action=fetch");
+    const data = await response.json();
     const booked = data.bookings || [];
-    return booked.filter(b => b.time === "12:00").map(b => b.date);
+    return booked.map(b => b.date);
   } catch(e) {
     return [];
   }
 }
 
-// Initialize booking datepicker
-(async () => {
+// Initialize booking datepicker with available dates
+async function initBookingDatepicker() {
   const bookedDates = await getBookedDates();
   const availableDates = allowedDates.filter(d => !bookedDates.includes(d));
   flatpickr("#date", { dateFormat:"Y-m-d", enable: availableDates });
-})();
+}
+initBookingDatepicker();
 
-// Initialize cancel datepicker
+// Initialize cancel datepicker (all allowed dates)
 flatpickr("#cancelDate", { dateFormat:"Y-m-d", enable: allowedDates });
 
 // Booking form submission
-document.getElementById("bookingForm").addEventListener("submit", function(e){
+document.getElementById("bookingForm").addEventListener("submit", async function(e){
   e.preventDefault();
-
   const bookingData = {
     action:"book",
     name: document.getElementById("name").value,
     phone: document.getElementById("phone").value,
     email: document.getElementById("email").value,
     service: document.getElementById("service").value,
-    length: document.getElementById("service").value === "Acrylic Full Set" ? document.getElementById("length").value : "N/A",
+    length: document.getElementById("service").value==="Acrylic Full Set"? document.getElementById("length").value:"N/A",
     date: document.getElementById("date").value,
     time: "12:00"
   };
 
-  fetch(WEB_APP_URL, {
-    method:"POST",
-    body: JSON.stringify(bookingData)
-  })
-  .then(res => res.json())
-  .then(async data => {
+  try {
+    const res = await fetch(WEB_APP_URL, { method:"POST", body:JSON.stringify(bookingData) });
+    const data = await res.json();
     alert(data.message);
 
     if(data.status === "success") {
       // Refresh available dates after booking
-      const bookedDates = await getBookedDates(); // fetch updated booked dates
-      const availableDates = allowedDates.filter(d => !bookedDates.includes(d));
-
-      // Destroy previous datepicker and recreate with updated available dates
-      const oldPicker = document.querySelector("#date")._flatpickr;
-      if(oldPicker) oldPicker.destroy();
-
-      flatpickr("#date", { dateFormat:"Y-m-d", enable: availableDates });
+      await initBookingDatepicker();
     }
-  })
-  .catch(()=>alert("Error booking appointment"));
+  } catch {
+    alert("Error booking appointment");
+  }
 });
 
 // Cancel form submission
-document.getElementById("cancelForm").addEventListener("submit", function(e){
+document.getElementById("cancelForm").addEventListener("submit", async function(e){
   e.preventDefault();
-  fetch(WEB_APP_URL, {
-    method:"POST",
-    body: JSON.stringify({
-      action:"cancel",
-      email: document.getElementById("cancelEmail").value,
-      date: document.getElementById("cancelDate").value,
-      time: "12:00"
-    })
-  })
-  .then(res=>res.json())
-  .then(data=>alert(data.message))
-  .catch(()=>alert("Error cancelling appointment"));
+  const cancelData = {
+    action:"cancel",
+    email: document.getElementById("cancelEmail").value,
+    date: document.getElementById("cancelDate").value,
+    time: "12:00"
+  };
+  try {
+    const res = await fetch(WEB_APP_URL, { method:"POST", body: JSON.stringify(cancelData) });
+    const data = await res.json();
+    alert(data.message);
+    // Refresh available dates after cancellation
+    await initBookingDatepicker();
+  } catch {
+    alert("Error cancelling appointment");
+  }
 });
 </script>
 </body>
