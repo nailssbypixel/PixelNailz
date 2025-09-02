@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PixelNailz Booking</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #fff0f6;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #ff66a3;
+      color: white;
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 1.8rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+    .container {
+      max-width: 500px;
+      margin: 2rem auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      color: #ff3399;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    button {
+      margin-top: 1.5rem;
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: #ff3399;
+      color: white;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+    button:hover {
+      background: #e60073;
+    }
+    #confirmation {
+      margin-top: 1.5rem;
+      background: #ffe6f2;
+      padding: 12px;
+      border-radius: 8px;
+      color: #e60073;
+      font-weight: bold;
+    }
+    footer {
+      text-align: center;
+      padding: 1rem;
+      margin-top: 2rem;
+      color: #666;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>PixelNailz Booking</header>
+
+<div class="container">
+  <h2>Book Your September Appointment</h2>
+  <form id="bookingForm">
+    <label for="name">Full Name</label>
+    <input type="text" id="name" name="name" required>
+
+    <label for="phone">Phone Number</label>
+    <input type="tel" id="phone" name="phone" required>
+
+    <label for="email">Email Address</label>
+    <input type="email" id="email" name="email">
+
+    <label for="service">Choose Service</label>
+    <select id="service" name="service" required>
+      <option value="">-- Select a Service --</option>
+      <option value="manicure">Classic Manicure</option>
+      <option value="gel-manicure">Gel Manicure</option>
+      <option value="acrylics">Acrylic Full Set</option>
+      
+      <option value="fill">Acrylic/Gel Fill</option>
+    </select>
+
+    <!-- Length options (only show if Acrylic Full Set is chosen) -->
+    <label for="length" id="lengthLabel" style="display:none;">Select Length</label>
+    <select id="length" name="length" style="display:none;">
+      <option value="">-- Select Length --</option>
+      <option value="short">Short</option>
+      <option value="medium">Medium</option>
+      <option value="long">Long</option>
+      <option value="extra-long">Extra Long</option>
+    </select>
+
+    <label for="date">Select Date (September only)</label>
+    <select id="date" required>
+      <option value="">-- Select a Date --</option>
+      <option value="2025-09-07">September 7</option>
+      <option value="2025-09-13">September 13</option>
+      <option value="2025-09-14">September 14</option>
+      <option value="2025-09-20">September 20</option>
+      <option value="2025-09-21">September 21</option>
+      <option value="2025-09-27">September 27</option>
+      <option value="2025-09-28">September 28</option>
+    </select>
+
+    <label for="time">Select Time</label>
+    <select id="time" required>
+      <option value="">-- Select a Time --</option>
+      <option value="11:00">11:00 AM</option>
+      <option value="15:00">3:00 PM</option>
+    </select>
+
+    <label for="notes">Special Requests</label>
+    <textarea id="notes" name="notes" rows="3" placeholder="Tell us if you want a specific design..."></textarea>
+
+    <button type="submit">Submit Booking</button>
+  </form>
+
+  <div id="confirmation" style="display:none;"></div>
+</div>
+
+<footer>
+  © 2025 PixelNailz | Designed with 💅
+</footer>
+
+<script>
+  // Show length options only if Acrylic Full Set is selected
+  const service = document.getElementById('service');
+  const lengthSelect = document.getElementById('length');
+  const lengthLabel = document.getElementById('lengthLabel');
+
+  service.addEventListener('change', () => {
+    if(service.value === 'acrylics') {
+      lengthSelect.style.display = 'block';
+      lengthLabel.style.display = 'block';
+      lengthSelect.required = true; // make length required
+    } else {
+      lengthSelect.style.display = 'none';
+      lengthLabel.style.display = 'none';
+      lengthSelect.required = false;
+      lengthSelect.value = '';
+    }
+  });
+
+  // Handle form submission
+  const form = document.getElementById('bookingForm');
+  const confirmation = document.getElementById('confirmation');
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    // Collect form data
+    const name = document.getElementById('name').value;
+    const phone = document.getElementById('phone').value;
+    const email = document.getElementById('email').value;
+    const serviceValue = service.value;
+    const lengthValue = lengthSelect.value;
+    const date = document.getElementById('date').value;
+    const time = document.getElementById('time').value;
+    const notes = document.getElementById('notes').value;
+
+    // Show deposit message
+    confirmation.innerHTML = `
+      Thank you, ${name}! <br>
+      $10 deposit must be sent within 1 hour to confirm your appointment through e-transfer.<br>
+      Please DM me for the email. <br><br>
+      Your booking: <br>
+      Service: ${serviceValue}${serviceValue==='acrylics' ? ' ('+lengthValue+')' : ''}<br>
+      Date: ${date}<br>
+      Time: ${time}
+    `;
+    confirmation.style.display = 'block';
+
+    // Reset form
+    form.reset();
+    lengthSelect.style.display = 'none';
+    lengthLabel.style.display = 'none';
+  });
+</script>
+
+</body>
+</html>
