@@ -116,35 +116,43 @@ async function getBookedDates() {
   }
 }
 
-// Initialize booking datepicker
+// Initialize booking datepicker with only available dates
 (async () => {
   const bookedDates = await getBookedDates();
   const availableDates = allowedDates.filter(d => !bookedDates.includes(d));
   flatpickr("#date", { dateFormat:"Y-m-d", enable: availableDates });
 })();
 
-// Initialize cancel datepicker
+// Initialize cancel datepicker (all allowed dates)
 flatpickr("#cancelDate", { dateFormat:"Y-m-d", enable: allowedDates });
 
-// Booking form
+// Booking form submission
 document.getElementById("bookingForm").addEventListener("submit", function(e) {
-e.preventDefault();
-fetch(WEB_APP_URL, {
-method:"POST",
-body: JSON.stringify({
-action:"book",
-name: document.getElementById("name").value,
-phone: document.getElementById("phone").value,
-email: document.getElementById("email").value,
-service: document.getElementById("service").value,
-length: document.getElementById("service").value==="Acrylic Full Set"? document.getElementById("length").value:"N/A",
-date: document.getElementById("date").value,
-time: "12:00"
-})
-})
-.then(res => res.json())
-.then(data => alert(data.message))
-.catch(()=>alert("Error booking appointment"));
+  e.preventDefault();
+  fetch(WEB_APP_URL, {
+    method:"POST",
+    body: JSON.stringify({
+      action:"book",
+      name: document.getElementById("name").value,
+      phone: document.getElementById("phone").value,
+      email: document.getElementById("email").value,
+      service: document.getElementById("service").value,
+      length: document.getElementById("service").value === "Acrylic Full Set" ? document.getElementById("length").value : "N/A",
+      date: document.getElementById("date").value,
+      time: "12:00"
+    })
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert(data.message);
+    // Refresh datepicker so newly booked dates are disabled
+    (async () => {
+      const bookedDates = await getBookedDates();
+      const availableDates = allowedDates.filter(d => !bookedDates.includes(d));
+      flatpickr("#date", { dateFormat:"Y-m-d", enable: availableDates });
+    })();
+  })
+  .catch(() => alert("Error booking appointment"));
 });
 
 // Cancel form
