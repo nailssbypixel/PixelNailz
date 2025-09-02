@@ -104,17 +104,19 @@ document.getElementById("service").addEventListener("change", function() {
 // Allowed September dates
 const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
 
-// Function to fetch booked dates
+// Function to fetch booked dates at 12:00
 async function getBookedDates() {
   try {
     const response = await fetch(WEB_APP_URL + "?action=fetch");
     const data = await response.json();
     const booked = data.bookings || [];
-    return booked.map(b => b.date); // list of booked dates
+    // Only consider dates that already have a booking at 12:00
+    return booked.filter(b => b.time === "12:00").map(b => b.date);
   } catch(e) {
     return [];
   }
 }
+
 
 // Initialize booking datepicker with only available dates
 (async () => {
