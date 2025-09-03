@@ -1,4 +1,3 @@
-@@ -1,114 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -93,15 +92,11 @@ After booking, please DM <b>@pixelnailz</b> on Instagram for the e-transfer emai
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyUqh_l2OcpEopSqX_I1uMwCtBf1mdvDxqaBJ46tTzpgnkH9Xdpq0JUfi7RB_6ZEu5E/exec";
-
-// Allowed September dates
-const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyUqh_l2OcpEopSqX_I1uMwCtBf1mdvDxqaBJ46tTzpgnkH9Xdpq0JUfi7RB_6ZEu5E/exec"; // Replace with your Apps Script URL
 
 // Show length field only for Acrylic Full Set
 document.getElementById("service").addEventListener("change", function() {
   const lengthField = document.getElementById("lengthField");
-  if(this.value === "Acrylic Full Set") lengthField.classList.remove("hidden");
   if (this.value === "Acrylic Full Set") lengthField.classList.remove("hidden");
   else lengthField.classList.add("hidden");
 });
@@ -109,76 +104,17 @@ document.getElementById("service").addEventListener("change", function() {
 // Allowed September dates
 const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
 
-// Fetch booked dates from Apps Script
 // Fetch booked dates
 async function getBookedDates() {
   try {
-    const response = await fetch(WEB_APP_URL + "?action=fetch");
-    const data = await response.json();
     const res = await fetch(WEB_APP_URL + "?action=fetch");
     const data = await res.json();
-    return data.bookings || [];
-  } catch(e) {
+    const booked = data.bookings || [];
+    return booked.map(b => b.date);
+  } catch {
     return [];
-@@ -119,17 +27,14 @@ <h2>Cancel Appointment</h2>
-async function initBookingDatepicker() {
-  const bookedDates = await getBookedDates();
-  const availableDates = allowedDates.filter(d => !bookedDates.includes(d));
-  flatpickr("#date", {
-    dateFormat:"Y-m-d",
-    enable: availableDates
-  });
-  flatpickr("#date", { dateFormat:"Y-m-d", enable: availableDates });
+  }
 }
-initBookingDatepicker();
 
-// Initialize cancel datepicker (all allowed dates)
-// Cancel datepicker
-flatpickr("#cancelDate", { dateFormat:"Y-m-d", enable: allowedDates });
-
-// Booking form submission
-// Booking form
-document.getElementById("bookingForm").addEventListener("submit", async function(e){
-  e.preventDefault();
-  const bookingData = {
-@@ -147,17 +52,13 @@ <h2>Cancel Appointment</h2>
-    const res = await fetch(WEB_APP_URL, { method:"POST", body:JSON.stringify(bookingData) });
-    const data = await res.json();
-    alert(data.message);
-
-    if(data.status === "success") {
-      // Refresh available dates after booking
-      await initBookingDatepicker();
-    }
-    if(data.status==="success") await initBookingDatepicker(); // refresh calendar
-  } catch {
-    alert("Error booking appointment");
-  }
-});
-
-// Cancel form submission
-// Cancel form
-document.getElementById("cancelForm").addEventListener("submit", async function(e){
-  e.preventDefault();
-  const cancelData = {
-@@ -166,17 +67,14 @@ <h2>Cancel Appointment</h2>
-    date: document.getElementById("cancelDate").value,
-    time: "12:00 PM"
-  };
-
-  try {
-    const res = await fetch(WEB_APP_URL, { method:"POST", body: JSON.stringify(cancelData) });
-    const res = await fetch(WEB_APP_URL, { method:"POST", body:JSON.stringify(cancelData) });
-    const data = await res.json();
-    alert(data.message);
-
-    // Refresh available dates after cancellation
-    await initBookingDatepicker();
-    if(data.status==="success") await initBookingDatepicker(); // refresh calendar
-  } catch {
-    alert("Error cancelling appointment");
-  }
-});
-</script>
-</body>
-</html>
+// Initialize booking calendar
+async function initBooking
