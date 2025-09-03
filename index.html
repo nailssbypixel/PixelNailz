@@ -1,184 +1,73 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>PixelNailz Booking</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<style>
-body { font-family: Arial, sans-serif; background: #f8f8f8; margin:0; padding:0; }
-header { background: #ff66a3; color: white; text-align: center; padding: 1.5rem; font-size: 2rem; font-weight: bold; letter-spacing: 1px; }
-.container { max-width: 600px; margin: 30px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-h2 { text-align: center; color: #d63384; }
-form { display:flex; flex-direction: column; margin-top:20px; }
-label { margin:8px 0 4px; font-weight:bold; }
-input, select, button { padding:10px; border:1px solid #ccc; border-radius:6px; margin-bottom:12px; font-size:1em; }
-button { background:#d63384; color:white; border:none; cursor:pointer; font-weight:bold; }
-button:hover { background:#b82c6d; }
-.note { font-size:0.9em; color:#555; text-align:center; margin:10px 0 20px; }
-.hidden { display:none; }
-footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; background:#f8f8f8; margin-top:40px; }
-</style>
-</head>
-<body>
+const SHEET_ID = "YOUR_SHEET_ID"; // Replace with your spreadsheet ID
+const SHEET_NAME = "Bookings";
+const NOTIFICATION_EMAIL = "nailssbypixel@gmail.com";
 
-<header>PixelNailz Booking</header>
+function doGet(e) {
+  if(e.parameter.action === "fetch") {
+    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
+    const data = sheet.getDataRange().getValues().slice(1);
+    const bookings = data.map(row => ({
+      date: formatDate(row[4]),
+      time: row[5].toString().trim()
+    }));
+    return ContentService.createTextOutput(JSON.stringify({ bookings }))
+                         .setMimeType(ContentService.MimeType.JSON);
+  }
+  return ContentService.createTextOutput("OK");
+}
 
-<div class="container" id="bookContainer">
-<h2>Book Your Appointment</h2>
-<form id="bookingForm">
-<label for="name">Full Name</label>
-<input type="text" id="name" required>
+function doPost(e) {
+  const data = JSON.parse(e.postData.contents);
+  const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SHEET_NAME);
 
-<label for="phone">Phone Number</label>
-<input type="tel" id="phone" required>
+  if(data.action === "book") {
+    // Check if date & time already booked
+    const values = sheet.getDataRange().getValues().slice(1);
+    const isBooked = values.some(row => formatDate(row[4]) === data.date && row[5].toString().trim() === "12:00 PM");
+    if(isBooked) {
+      return ContentService.createTextOutput(JSON.stringify({status:"error", message:"This date is already booked!"}))
+                           .setMimeType(ContentService.MimeType.JSON);
+    }
 
-<label for="email">Email</label>
-<input type="email" id="email" required>
+    sheet.appendRow([
+      data.name || "",
+      data.phone || "",
+      data.service || "",
+      data.length || "N/A",
+      data.date || "",
+      "12:00 PM",
+      data.email || ""
+    ]);
 
-<label for="service">Service</label>
-<select id="service" required>
-<option value="">Select a service</option>
-<option value="Gel Manicure">Gel Manicure</option>
-<option value="Regular Manicure">Regular Manicure</option>
-<option value="Acrylic Full Set">Acrylic Full Set</option>
-<option value="Acrylic Fill">Acrylic Fill</option>
-</select>
+    // Send email
+    MailApp.sendEmail(NOTIFICATION_EMAIL, `New PixelNailz Booking: ${data.name}`,
+      `Name: ${data.name}\nPhone: ${data.phone}\nEmail: ${data.email}\nService: ${data.service} ${data.service === "Acrylic Full Set" ? "(" + data.length + ")" : ""}\nDate: ${data.date}\nTime: 12:00 PM`
+    );
 
-<div id="lengthField" class="hidden">
-<label for="length">Length</label>
-<select id="length">
-<option value="Short">Short</option>
-<option value="Medium">Medium</option>
-<option value="Long">Long</option>
-<option value="Extra Long">Extra Long</option>
-</select>
-</div>
+    return ContentService.createTextOutput(JSON.stringify({status:"success", message:"Booking successful!"}))
+                         .setMimeType(ContentService.MimeType.JSON);
 
-<label for="date">Date</label>
-<input type="text" id="date" placeholder="Select a date" required readonly>
-
-<label for="time">Time</label>
-<select id="time" required>
-<option value="12:00 PM">12:00 PM</option>
-</select>
-
-<button type="submit">Book Appointment</button>
-</form>
-
-<div class="note">
-After booking, please DM <b>@pixelnailz</b> on Instagram for the e-transfer email and to send your inspo pic 💖
-</div>
-</div>
-
-<div class="container" id="cancelContainer">
-<h2>Cancel Appointment</h2>
-<form id="cancelForm">
-<label for="cancelEmail">Email</label>
-<input type="email" id="cancelEmail" required>
-
-<label for="cancelDate">Date</label>
-<input type="text" id="cancelDate" placeholder="Select a date" required readonly>
-
-<label for="cancelTime">Time</label>
-<select id="cancelTime" required>
-<option value="12:00 PM">12:00 PM</option>
-</select>
-
-<button type="submit">Cancel Appointment</button>
-</form>
-</div>
-
-<footer>© 2025 PixelNailz</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyUqh_l2OcpEopSqX_I1uMwCtBf1mdvDxqaBJ46tTzpgnkH9Xdpq0JUfi7RB_6ZEu5E/exec";
-
-// Show length field only for Acrylic Full Set
-document.getElementById("service").addEventListener("change", function() {
-  const lengthField = document.getElementById("lengthField");
-  if(this.value === "Acrylic Full Set") lengthField.classList.remove("hidden");
-  else lengthField.classList.add("hidden");
-});
-
-// Allowed dates
-const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
-
-// Fetch booked dates from Apps Script
-async function getBookedDates() {
-  try {
-    const response = await fetch(WEB_APP_URL + "?action=fetch");
-    const data = await response.json();
-    return data.bookedDates || [];
-  } catch(e) {
-    return [];
+  } else if(data.action === "cancel") {
+    const values = sheet.getDataRange().getValues();
+    let found = false;
+    for(let i = values.length-1; i>=1; i--) {
+      const row = values[i];
+      if(!row || row.length<7) continue;
+      const rowEmail = (row[6]||"").toString().trim();
+      const rowDate = formatDate(row[4]);
+      const rowTime = row[5].toString().trim();
+      if(rowEmail === (data.email||"").trim() && rowDate === (data.date||"").trim() && rowTime === "12:00 PM") {
+        sheet.deleteRow(i+1);
+        found = true;
+        break;
+      }
+    }
+    return ContentService.createTextOutput(JSON.stringify({status:"success", message: found?"Booking cancelled successfully.":"No matching booking found."}))
+                         .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
-// Initialize booking datepicker
-let bookingPicker;
-async function initBookingDatepicker() {
-  const bookedDates = await getBookedDates();
-  const availableDates = allowedDates.filter(d => !bookedDates.includes(d));
-
-  if(bookingPicker) bookingPicker.destroy();
-
-  bookingPicker = flatpickr("#date", {
-    dateFormat: "Y-m-d",
-    enable: availableDates,
-    disable: bookedDates,
-    defaultDate: null,
-    minDate: "today"
-  });
+function formatDate(value){
+  if(value instanceof Date) return Utilities.formatDate(value, Session.getScriptTimeZone(), "yyyy-MM-dd");
+  return value.toString().trim();
 }
-initBookingDatepicker();
-
-// Initialize cancel datepicker
-flatpickr("#cancelDate", { dateFormat:"Y-m-d", enable: allowedDates });
-
-// Booking form submission
-document.getElementById("bookingForm").addEventListener("submit", async function(e){
-  e.preventDefault();
-  const bookingData = {
-    action:"book",
-    name: document.getElementById("name").value,
-    phone: document.getElementById("phone").value,
-    email: document.getElementById("email").value,
-    service: document.getElementById("service").value,
-    length: document.getElementById("service").value==="Acrylic Full Set"? document.getElementById("length").value:"N/A",
-    date: document.getElementById("date").value,
-    time: "12:00 PM"
-  };
-
-  try {
-    const res = await fetch(WEB_APP_URL, { method:"POST", body:JSON.stringify(bookingData) });
-    const data = await res.json();
-    alert(data.message);
-    if(data.status === "success") await initBookingDatepicker();
-  } catch {
-    alert("Error booking appointment");
-  }
-});
-
-// Cancel form submission
-document.getElementById("cancelForm").addEventListener("submit", async function(e){
-  e.preventDefault();
-  const cancelData = {
-    action:"cancel",
-    email: document.getElementById("cancelEmail").value,
-    date: document.getElementById("cancelDate").value,
-    time: "12:00 PM"
-  };
-  try {
-    const res = await fetch(WEB_APP_URL, { method:"POST", body:JSON.stringify(cancelData) });
-    const data = await res.json();
-    alert(data.message);
-    await initBookingDatepicker();
-  } catch {
-    alert("Error cancelling appointment");
-  }
-});
-</script>
-
-</body>
-</html>
