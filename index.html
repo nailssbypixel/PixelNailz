@@ -114,7 +114,7 @@ async function initBookingDatepicker() {
     if(bookingPicker) bookingPicker.destroy();
 
     bookingPicker = flatpickr("#date", {
-      dateFormat:"Y-m-d",
+      dateFormat: "Y-m-d",
       enable: availableDates,
       defaultDate: null,
       minDate: "today",
@@ -133,26 +133,28 @@ flatpickr("#cancelDate", { dateFormat:"Y-m-d", enable: allowedDates, disableMobi
 document.getElementById("bookingForm").addEventListener("submit", async function(e) {
   e.preventDefault();
   const bookingData = {
-    action:"book",
+    action: "book",
     name: document.getElementById("name").value,
     phone: document.getElementById("phone").value,
     email: document.getElementById("email").value,
     service: document.getElementById("service").value,
-    length: document.getElementById("service").value==="Acrylic Full Set"? document.getElementById("length").value:"N/A",
+    length: document.getElementById("service").value==="Acrylic Full Set" ? document.getElementById("length").value : "N/A",
     date: document.getElementById("date").value,
     time: "12:00 PM"
   };
   try {
-    const res = await fetch(WEB_APP_URL, { method:"POST", body:JSON.stringify(bookingData) });
+    const res = await fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify(bookingData) });
     const data = await res.json();
     alert(data.message);
+
+    // Refresh calendar after successful booking
     if(data.status === "success") await initBookingDatepicker();
   } catch {
     alert("Error booking appointment");
   }
 });
 
-// Cancel form
+// Cancel form (unchanged)
 document.getElementById("cancelForm").addEventListener("submit", async function(e) {
   e.preventDefault();
   const cancelData = {
@@ -165,6 +167,8 @@ document.getElementById("cancelForm").addEventListener("submit", async function(
     const res = await fetch(WEB_APP_URL, { method:"POST", body:JSON.stringify(cancelData) });
     const data = await res.json();
     alert(data.message);
+
+    // Refresh calendar if cancellation succeeds
     if(data.status === "success") await initBookingDatepicker();
   } catch {
     alert("Error cancelling appointment");
