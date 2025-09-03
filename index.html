@@ -1,3 +1,4 @@
+@@ -1,114 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -55,7 +56,7 @@ footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; backgr
 </div>
 
 <label for="date">Date</label>
-<input type="text" id="date" placeholder="Select a date" required readonly>
+<input type="text" id="date" placeholder="Select a date" required>
 
 <label for="time">Time</label>
 <select id="time" required>
@@ -77,7 +78,7 @@ After booking, please DM <b>@pixelnailz</b> on Instagram for the e-transfer emai
 <input type="email" id="cancelEmail" required>
 
 <label for="cancelDate">Date</label>
-<input type="text" id="cancelDate" placeholder="Select a date" required readonly>
+<input type="text" id="cancelDate" placeholder="Select a date" required>
 
 <label for="cancelTime">Time</label>
 <select id="cancelTime" required>
@@ -92,74 +93,91 @@ After booking, please DM <b>@pixelnailz</b> on Instagram for the e-transfer emai
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-const WEB_APP_URL = "YOUR_WEB_APP_URL"; // Replace with your Apps Script URL
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyUqh_l2OcpEopSqX_I1uMwCtBf1mdvDxqaBJ46tTzpgnkH9Xdpq0JUfi7RB_6ZEu5E/exec";
+
+// Allowed September dates
 const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
 
 // Show length field only for Acrylic Full Set
 document.getElementById("service").addEventListener("change", function() {
   const lengthField = document.getElementById("lengthField");
   if(this.value === "Acrylic Full Set") lengthField.classList.remove("hidden");
+  if (this.value === "Acrylic Full Set") lengthField.classList.remove("hidden");
   else lengthField.classList.add("hidden");
 });
 
-// Initialize booking datepicker
-let bookingPicker;
+// Allowed September dates
+const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
+
+// Fetch booked dates from Apps Script
+// Fetch booked dates
+async function getBookedDates() {
+  try {
+    const response = await fetch(WEB_APP_URL + "?action=fetch");
+    const data = await response.json();
+    const res = await fetch(WEB_APP_URL + "?action=fetch");
+    const data = await res.json();
+    return data.bookings || [];
+  } catch(e) {
+    return [];
+@@ -119,17 +27,14 @@ <h2>Cancel Appointment</h2>
 async function initBookingDatepicker() {
-  const response = await fetch(WEB_APP_URL + "?action=fetch");
-  const data = await response.json();
-  const bookedDates = (data.bookings || []).map(b => b.date);
-
+  const bookedDates = await getBookedDates();
   const availableDates = allowedDates.filter(d => !bookedDates.includes(d));
-
-  if(bookingPicker) bookingPicker.destroy();
-
-  bookingPicker = flatpickr("#date", {
-    dateFormat: "Y-m-d",
-    enable: availableDates,
-    disable: bookedDates,
-    defaultDate: null,
-    minDate: "today"
+  flatpickr("#date", {
+    dateFormat:"Y-m-d",
+    enable: availableDates
   });
+  flatpickr("#date", { dateFormat:"Y-m-d", enable: availableDates });
 }
 initBookingDatepicker();
 
+// Initialize cancel datepicker (all allowed dates)
 // Cancel datepicker
-flatpickr("#cancelDate", { dateFormat: "Y-m-d", enable: allowedDates });
+flatpickr("#cancelDate", { dateFormat:"Y-m-d", enable: allowedDates });
 
-// Booking submission
-document.getElementById("bookingForm").addEventListener("submit", async function(e) {
+// Booking form submission
+// Booking form
+document.getElementById("bookingForm").addEventListener("submit", async function(e){
   e.preventDefault();
   const bookingData = {
-    action: "book",
-    name: document.getElementById("name").value,
-    phone: document.getElementById("phone").value,
-    email: document.getElementById("email").value,
-    service: document.getElementById("service").value,
-    length: document.getElementById("service").value === "Acrylic Full Set" ? document.getElementById("length").value : "N/A",
-    date: document.getElementById("date").value,
-    time: "12:00 PM"
-  };
+@@ -147,17 +52,13 @@ <h2>Cancel Appointment</h2>
+    const res = await fetch(WEB_APP_URL, { method:"POST", body:JSON.stringify(bookingData) });
+    const data = await res.json();
+    alert(data.message);
 
-  const res = await fetch(WEB_APP_URL, { method:"POST", body: JSON.stringify(bookingData) });
-  const data = await res.json();
-  alert(data.message);
-
-  if(data.status === "success") await initBookingDatepicker();
+    if(data.status === "success") {
+      // Refresh available dates after booking
+      await initBookingDatepicker();
+    }
+    if(data.status==="success") await initBookingDatepicker(); // refresh calendar
+  } catch {
+    alert("Error booking appointment");
+  }
 });
 
-// Cancel submission
-document.getElementById("cancelForm").addEventListener("submit", async function(e) {
+// Cancel form submission
+// Cancel form
+document.getElementById("cancelForm").addEventListener("submit", async function(e){
   e.preventDefault();
   const cancelData = {
-    action: "cancel",
-    email: document.getElementById("cancelEmail").value,
+@@ -166,17 +67,14 @@ <h2>Cancel Appointment</h2>
     date: document.getElementById("cancelDate").value,
     time: "12:00 PM"
   };
-  const res = await fetch(WEB_APP_URL, { method:"POST", body: JSON.stringify(cancelData) });
-  const data = await res.json();
-  alert(data.message);
-  if(data.status === "success") await initBookingDatepicker();
+
+  try {
+    const res = await fetch(WEB_APP_URL, { method:"POST", body: JSON.stringify(cancelData) });
+    const res = await fetch(WEB_APP_URL, { method:"POST", body:JSON.stringify(cancelData) });
+    const data = await res.json();
+    alert(data.message);
+
+    // Refresh available dates after cancellation
+    await initBookingDatepicker();
+    if(data.status==="success") await initBookingDatepicker(); // refresh calendar
+  } catch {
+    alert("Error cancelling appointment");
+  }
 });
 </script>
 </body>
