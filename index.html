@@ -59,21 +59,6 @@ footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; margin
 <div class="note">After booking, DM <b>@pixelnailz</b> on Instagram for payment & inspo 💖</div>
 </div>
 
-<div class="container">
-<h2>Cancel Appointment</h2>
-<form id="cancelForm">
-<label>Email</label>
-<input type="email" id="cancelEmail" required>
-<label>Date</label>
-<input type="text" id="cancelDate" required>
-<label>Time</label>
-<select id="cancelTime" required>
-  <option value="12:00 PM">12:00 PM</option>
-</select>
-<button type="submit">Cancel Appointment</button>
-</form>
-</div>
-
 <footer>© 2025 PixelNailz</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -94,7 +79,6 @@ async function getBookedDates() {
   const booked = await getBookedDates();
   const available = allowedDates.filter(d => !booked.includes(d));
   flatpickr("#date", { dateFormat:"Y-m-d", enable: available });
-  flatpickr("#cancelDate", { dateFormat:"Y-m-d", enable: allowedDates });
 })();
 
 document.getElementById("service").addEventListener("change", e=>{
@@ -119,22 +103,6 @@ document.getElementById("bookingForm").addEventListener("submit", e=>{
   .then(r=>r.json())
   .then(d=>alert(d.message))
   .catch(()=>alert("Error booking"));
-});
-
-document.getElementById("cancelForm").addEventListener("submit", e=>{
-  e.preventDefault();
-  fetch(WEB_APP_URL, {
-    method:"POST",
-    body: JSON.stringify({
-      action:"cancel",
-      email:document.getElementById("cancelEmail").value,
-      date:document.getElementById("cancelDate").value,
-      time:document.getElementById("cancelTime").value
-    })
-  })
-  .then(r=>r.json())
-  .then(d=>alert(d.message))
-  .catch(()=>alert("Error cancelling"));
 });
 </script>
 </body>
