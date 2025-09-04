@@ -17,6 +17,8 @@ button:hover { background:#b82c6d; }
 .hidden { display:none; }
 .note { font-size:0.9em; color:#555; text-align:center; margin:10px 0 20px; }
 footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; background:#f8f8f8; margin-top:40px; }
+.success { color: green; text-align: center; margin-bottom: 12px; }
+.error { color: red; text-align: center; margin-bottom: 12px; }
 </style>
 </head>
 <body>
@@ -25,6 +27,7 @@ footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; backgr
 
 <div class="container" id="bookContainer">
 <h2>Book Your Appointment</h2>
+<div id="bookingMessage"></div>
 <form id="bookingForm">
 <label for="name">Full Name</label>
 <input type="text" id="name" required>
@@ -97,29 +100,68 @@ document.getElementById("service").addEventListener("change", function() {
   this.value === "Acrylic Full Set" ? lengthField.classList.remove("hidden") : lengthField.classList.add("hidden");
 });
 
-const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
-
-// Fetch booked dates
-async function getBookedDates() {
+// Initialize booking datepicker
+async function initBookingDatepicker() {
   try {
     const response = await fetch(WEB_APP_URL + "?action=fetch");
     const data = await response.json();
-    const booked = data.bookings || [];
-    return booked.map(b => b.date);
-  } catch {
-    return [];
+    const availableDates = data.available || [];
+
+    flatpickr("#date", {
+      dateFormat: "Y-m-d",
+      enable: availableDates,
+      minDate: "today"
+    });
+  } catch (err) {
+    console.error("Failed to fetch dates", err);
   }
 }
-
-// Initialize datepicker
-async function initBookingDatepicker() {
-  const bookedDates = await getBookedDates();
-  const availableDates = allowedDates.filter(d => !bookedDates.includes(d));
-  flatpickr("#date", { dateFormat:"Y-m-d", enable: availableDates });
-}
 initBookingDatepicker();
-flatpickr("#cancelDate", { dateFormat:"Y-m-d", enable: allowedDates });
+
+// Cancel form datepicker
+flatpickr("#cancelDate", {
+  dateFormat: "Y-m-d",
+  enable: ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"]
+});
 
 // Booking submission
 document.getElementById("bookingForm").addEventListener("submit", async function(e){
-  e.preventDefault
+  e.preventDefault();
+  const msgDiv = document.getElementById("bookingMessage");
+  msgDiv.innerHTML = "";
+  const formData = {
+    action: "book",
+    name: document.getElementById("name").value,
+    phone: document.getElementById("phone").value,
+    email: document.getElementById("email").value,
+    service: document.getElementById("service").value,
+    length: document.getElementById("length").value,
+    date: document.getElementById("date").value,
+    time: document.getElementById("time").value
+  };
+  
+  try {
+    const response = await fetch(WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify(formData)
+    });
+    const data = await response.json();
+    if (data.status === "success") {
+      msgDiv.className = "success";
+      msgDiv.innerText = data.message;
+      // Refresh datepicker to disable booked date
+      initBookingDatepicker();
+      document.getElementById("bookingForm").reset();
+      document.getElementById("lengthField").classList.add("hidden");
+    } else {
+      msgDiv.className = "error";
+      msgDiv.innerText = data.message;
+    }
+  } catch(err) {
+    msgDiv.className = "error";
+    msgDiv.innerText = "Error submitting booking. Try again.";
+  }
+});
+</script>
+</body>
+</html>
