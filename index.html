@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PixelNailz Booking</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
@@ -29,6 +30,7 @@ header {
 
 .container {
   max-width: 600px;
+  width: 90%;
   margin: 30px auto;
   background: white;
   padding: 25px;
@@ -63,8 +65,8 @@ button:hover { background:#b82c6d; }
 
 .hidden { display:none; }
 
-.footer-note {
-  margin-top: 20px;
+.footer-note strong:first-child {
+  font-weight: bold;
 }
 
 footer {
@@ -73,6 +75,12 @@ footer {
   color:#888;
   padding:15px 0;
   background:#ffe6f0;
+}
+
+.bottom-note {
+  text-align: center;
+  font-weight: bold;
+  margin-top: 10px;
 }
 
 .success { color: green; text-align: center; margin-bottom: 12px; }
@@ -128,13 +136,16 @@ footer {
   </form>
 
   <div class="footer-note">
-    <strong>After booking, please DM @pixelnailz for the following:</strong>
+    <strong>After booking, please DM @pixelnails for the following:</strong>
     <ol>
-      <li>Get e-transfer email to send your <strong>$10 NON-REFUNDABLE</strong> deposit within 24 hours (otherwise appointment will be cancelled)</li>
+      <li>Get e-transfer email to send your <strong>$10 NON-REFUNDABLE deposit</strong> within 24 hours (otherwise appointment will be cancelled)</li>
       <li>Send your inspo pic! 💖</li>
     </ol>
-    <p><strong>Cancellations: Please DM if you would like to cancel an appointment</strong></p>
   </div>
+</div>
+
+<div class="bottom-note">
+  Cancellations: Please dm if you would like to cancel an appointment
 </div>
 
 <footer>© 2025 PixelNailz</footer>
