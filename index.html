@@ -25,36 +25,38 @@ footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; margin
 <div class="container">
 <h2>Book Your Appointment</h2>
 <form id="bookingForm">
-<label>Name</label>
-<input type="text" id="name" required>
-<label>Phone</label>
-<input type="tel" id="phone" required>
-<label>Email</label>
-<input type="email" id="email" required>
-<label>Service</label>
-<select id="service" required>
-  <option value="">Select a service</option>
-  <option value="Gel Manicure">Gel Manicure</option>
-  <option value="Regular Manicure">Regular Manicure</option>
-  <option value="Acrylic Full Set">Acrylic Full Set</option>
-  <option value="Acrylic Fill">Acrylic Fill</option>
-</select>
-<div id="lengthField" style="display:none;">
-  <label>Length</label>
-  <select id="length">
-    <option value="Short">Short</option>
-    <option value="Medium">Medium</option>
-    <option value="Long">Long</option>
-    <option value="Extra Long">Extra Long</option>
+  <label>Name</label>
+  <input type="text" id="name" required>
+
+  <label>Phone</label>
+  <input type="tel" id="phone" required>
+
+  <label>Email</label>
+  <input type="email" id="email" required>
+
+  <label>Service</label>
+  <select id="service" required>
+    <option value="">Select a service</option>
+    <option value="Gel Manicure">Gel Manicure</option>
+    <option value="Regular Manicure">Regular Manicure</option>
+    <option value="Acrylic Full Set">Acrylic Full Set</option>
+    <option value="Acrylic Fill">Acrylic Fill</option>
   </select>
-</div>
-<label>Date</label>
-<input type="text" id="date" required>
-<label>Time</label>
-<select id="time" required>
-  <option value="12:00 PM">12:00 PM</option>
-</select>
-<button type="submit">Book Appointment</button>
+
+  <div id="lengthField" style="display:none;">
+    <label>Length</label>
+    <select id="length">
+      <option value="Short">Short</option>
+      <option value="Medium">Medium</option>
+      <option value="Long">Long</option>
+      <option value="Extra Long">Extra Long</option>
+    </select>
+  </div>
+
+  <label>Date</label>
+  <input type="text" id="date" required>
+
+  <button type="submit">Book Appointment</button>
 </form>
 <div class="note">After booking, DM <b>@pixelnailz</b> on Instagram for payment & inspo 💖</div>
 </div>
@@ -63,21 +65,26 @@ footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; margin
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyUqh_l2OcpEopSqX_I1uMwCtBf1mdvDxqaBJ46tTzpgnkH9Xdpq0JUfi7RB_6ZEu5E/exec";
+const WEB_APP_URL = "YOUR_DEPLOYED_APPS_SCRIPT_URL";
 
+// Only allow specific dates
 const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
 
 async function getBookedDates() {
   try {
-    const res = await fetch(WEB_APP_URL, {method:"POST", body: JSON.stringify({action:"fetch"})});
+    const res = await fetch(WEB_APP_URL + "?action=fetch");
     const data = await res.json();
-    return data.bookings.map(b => b.date);
-  } catch { return []; }
+    return data.booked || [];
+  } catch {
+    return [];
+  }
 }
 
 (async () => {
   const booked = await getBookedDates();
+  console.log("Booked from server:", booked); // debug
   const available = allowedDates.filter(d => !booked.includes(d));
+  console.log("Available dates:", available); // debug
   flatpickr("#date", { dateFormat:"Y-m-d", enable: available });
 })();
 
@@ -97,7 +104,7 @@ document.getElementById("bookingForm").addEventListener("submit", e=>{
       service:document.getElementById("service").value,
       length:document.getElementById("service").value==="Acrylic Full Set"?document.getElementById("length").value:"N/A",
       date:document.getElementById("date").value,
-      time:document.getElementById("time").value
+      time:"12:00 PM"
     })
   })
   .then(r=>r.json())
