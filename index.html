@@ -58,7 +58,16 @@ footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; backgr
 
     <label for="time">Time</label>
     <select id="time" required>
+      <option value="">-- Choose a time --</option>
+      <option value="10:00 AM">10:00 AM</option>
+      <option value="11:00 AM">11:00 AM</option>
       <option value="12:00 PM">12:00 PM</option>
+      <option value="1:00 PM">1:00 PM</option>
+      <option value="2:00 PM">2:00 PM</option>
+      <option value="3:00 PM">3:00 PM</option>
+      <option value="4:00 PM">4:00 PM</option>
+      <option value="5:00 PM">5:00 PM</option>
+      <option value="6:00 PM">6:00 PM</option>
     </select>
 
     <button type="submit">Book Appointment</button>
@@ -71,51 +80,56 @@ footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; backgr
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyUqh_l2OcpEopSqX_I1uMwCtBf1mdvDxqaBJ46tTzpgnkH9Xdpq0JUfi7RB_6ZEu5E/exec"; // Replace with your Google Apps Script web app URL
+const WEB_APP_URL = "YOUR_DEPLOYED_WEB_APP_URL"; // replace with your deployed Apps Script URL
 
-// Only allow bookings on these days
-const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
-
-let fp = null;
-
-// Show "Length" only if "Acrylic Full Set"
+// === Service length toggle ===
 document.getElementById('service').addEventListener('change', (e) => {
   document.getElementById('lengthField').classList.toggle('hidden', e.target.value !== 'Acrylic Full Set');
 });
 
-// Fetch booked dates from Google Sheets
-async function fetchBookings() {
+// === Fetch booked slots from server ===
+async function fetchBookedSlots() {
   try {
-    const res = await fetch(WEB_APP_URL + '?action=fetch');
-    const json = await res.json();
-    return Array.isArray(json.bookings) ? json.bookings : [];
+    const res = await fetch(WEB_APP_URL + "?action=fetch");
+    const data = await res.json();
+    return data.booked || [];
   } catch (err) {
-    console.error('fetchBookings error', err);
+    console.error("fetchBookedSlots error", err);
     return [];
   }
 }
 
-// Initialize datepicker with available dates only
-async function initDatepicker(bookingsInput) {
-  const bookings = bookingsInput || await fetchBookings();
-  const bookedDates = bookings.map(b => String(b.date));
-  const available = allowedDates.filter(d => !bookedDates.includes(d));
+const dateInput = document.querySelector("#date");
+const timeSelect = document.querySelector("#time");
 
-  if (fp) {
-    fp.destroy();
-    document.getElementById('date').value = '';
-  }
-  fp = flatpickr("#date", {
-    dateFormat: "Y-m-d",
-    enable: available,
-    minDate: "today"
+async function updateTimeOptions() {
+  const chosenDate = dateInput.value;
+  if (!chosenDate) return;
+
+  const booked = await fetchBookedSlots();
+
+  const bookedTimes = booked
+    .filter(b => b.date === chosenDate)
+    .map(b => b.time);
+
+  [...timeSelect.options].forEach(opt => {
+    if (opt.value && bookedTimes.includes(opt.value)) {
+      opt.disabled = true;
+      opt.textContent = `${opt.value} (Booked)`;
+    } else {
+      opt.disabled = false;
+      opt.textContent = opt.value;
+    }
   });
 }
 
-// Initial load
-initDatepicker();
+dateInput.addEventListener("change", updateTimeOptions);
+setInterval(updateTimeOptions, 30000); // auto-refresh every 30s
 
-// Handle booking submit
+// === Date picker init ===
+flatpickr("#date", { dateFormat: "Y-m-d", minDate: "today" });
+
+// === Booking submit ===
 document.getElementById('bookingForm').addEventListener('submit', async (ev) => {
   ev.preventDefault();
   const payload = {
@@ -128,7 +142,7 @@ document.getElementById('bookingForm').addEventListener('submit', async (ev) => 
     date: document.getElementById('date').value,
     time: document.getElementById('time').value
   };
-  if (!payload.date) { alert('Please pick a date'); return; }
+  if (!payload.date || !payload.time) { alert('Please select date and time'); return; }
 
   try {
     const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
@@ -136,15 +150,15 @@ document.getElementById('bookingForm').addEventListener('submit', async (ev) => 
 
     if (json.status === 'success') {
       alert(json.message || 'Booked!');
-      await initDatepicker(json.bookings || null);
+      await updateTimeOptions();
     } else {
       alert(json.message || 'Booking failed');
-      await initDatepicker(json.bookings || null);
+      await updateTimeOptions();
     }
   } catch (err) {
     console.error('booking error', err);
     alert('Error booking appointment');
-    await initDatepicker();
+    await updateTimeOptions();
   }
 });
 </script>
