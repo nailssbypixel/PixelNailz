@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -70,11 +71,29 @@ After booking, please DM <b>@pixelnailz</b> on Instagram for the e-transfer emai
 </div>
 </div>
 
+<div class="container" id="cancelContainer">
+<h2>Cancel Appointment</h2>
+<form id="cancelForm">
+<label for="cancelEmail">Email</label>
+<input type="email" id="cancelEmail" required>
+
+<label for="cancelDate">Date</label>
+<input type="text" id="cancelDate" placeholder="Select a date" required>
+
+<label for="cancelTime">Time</label>
+<select id="cancelTime" required>
+<option value="12:00 PM">12:00 PM</option>
+</select>
+
+<button type="submit">Cancel Appointment</button>
+</form>
+</div>
+
 <footer>© 2025 PixelNailz</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-const WEB_APP_URL = "YOUR_DEPLOYED_WEB_APP_URL"; // Replace with your Apps Script web app URL
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyUqh_l2OcpEopSqX_I1uMwCtBf1mdvDxqaBJ46tTzpgnkH9Xdpq0JUfi7RB_6ZEu5E/exec"; // Replace with your Apps Script URL
 
 // Show length field only for Acrylic Full Set
 document.getElementById("service").addEventListener("change", function() {
@@ -83,60 +102,20 @@ document.getElementById("service").addEventListener("change", function() {
   else lengthField.classList.add("hidden");
 });
 
-// Allowed booking dates (example: September dates)
-const allowedDates = [
-  "2025-09-07","2025-09-14","2025-09-21","2025-09-27","2025-09-28"
-];
+// Allowed September dates
+const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
 
-// Fetch booked dates from Apps Script
+// Fetch booked dates
 async function getBookedDates() {
   try {
-    const response = await fetch(WEB_APP_URL + "?action=fetch");
-    const data = await response.json();
-    return data.booked || [];
-  } catch (e) {
+    const res = await fetch(WEB_APP_URL + "?action=fetch");
+    const data = await res.json();
+    const booked = data.bookings || [];
+    return booked.map(b => b.date);
+  } catch {
     return [];
   }
 }
 
-// Initialize booking datepicker
-async function initBookingDatepicker() {
-  const bookedDates = await getBookedDates();
-  const availableDates = allowedDates.filter(d => !bookedDates.includes(d));
-
-  flatpickr("#date", {
-    dateFormat: "Y-m-d",
-    enable: availableDates
-  });
-}
-initBookingDatepicker();
-
-// Booking form
-document.getElementById("bookingForm").addEventListener("submit", async function(e){
-  e.preventDefault();
-  const bookingData = {
-    action: "book",
-    name: document.getElementById("name").value,
-    phone: document.getElementById("phone").value,
-    email: document.getElementById("email").value,
-    service: document.getElementById("service").value,
-    length: document.getElementById("service").value==="Acrylic Full Set" ? document.getElementById("length").value : "N/A",
-    date: document.getElementById("date").value,
-    time: "12:00 PM"
-  };
-
-  try {
-    const res = await fetch(WEB_APP_URL, { method:"POST", body:JSON.stringify(bookingData) });
-    const data = await res.json();
-    alert(data.message);
-
-    if (data.status === "success") {
-      await initBookingDatepicker(); // refresh available dates
-    }
-  } catch {
-    alert("Error booking appointment");
-  }
-});
-</script>
-</body>
-</html>
+// Initialize booking calendar
+async function initBooking
