@@ -14,6 +14,7 @@ html, body {
 body {
   display: flex;
   flex-direction: column;
+  min-height: 100vh; /* full viewport height */
   background: #ffe6f0; /* light pink */
   font-family: Arial, sans-serif;
 }
@@ -34,7 +35,7 @@ header {
   padding: 25px;
   border-radius: 12px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  flex: 1; /* allows container to grow and push footer down */
+  flex: 1; /* container takes remaining space */
 }
 
 h2 { text-align: center; color: #d63384; }
@@ -146,13 +147,11 @@ const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-
 
 let fpInstance;
 
-// Show length field only for Acrylic Full Set
 document.getElementById("service").addEventListener("change", function() {
   const lengthField = document.getElementById("lengthField");
   this.value === "Acrylic Full Set" ? lengthField.classList.remove("hidden") : lengthField.classList.add("hidden");
 });
 
-// Initialize or refresh calendar
 async function initBookingCalendar() {
   try {
     const res = await fetch(WEB_APP_URL + "?action=fetch");
@@ -175,10 +174,8 @@ async function initBookingCalendar() {
   }
 }
 
-// Call on page load
 initBookingCalendar();
 
-// Booking form submission
 document.getElementById("bookingForm").addEventListener("submit", async function(e){
   e.preventDefault();
   const msgDiv = document.getElementById("bookingMessage");
@@ -207,7 +204,7 @@ document.getElementById("bookingForm").addEventListener("submit", async function
       msgDiv.innerText = data.message;
       this.reset();
       document.getElementById("lengthField").classList.add("hidden");
-      await initBookingCalendar(); // refresh calendar to grey out booked date
+      await initBookingCalendar();
     } else {
       msgDiv.className = "error";
       msgDiv.innerText = data.message;
