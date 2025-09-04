@@ -15,7 +15,6 @@ input, select, button { padding:10px; border:1px solid #ccc; border-radius:6px; 
 button { background:#d63384; color:white; border:none; cursor:pointer; font-weight:bold; }
 button:hover { background:#b82c6d; }
 .note { font-size:0.9em; color:#555; text-align:center; margin:10px 0 20px; }
-.hidden { display:none; }
 footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; background:#f8f8f8; margin-top:40px; }
 </style>
 </head>
@@ -70,29 +69,11 @@ After booking, please DM <b>@pixelnailz</b> on Instagram for the e-transfer emai
 </div>
 </div>
 
-<div class="container" id="cancelContainer">
-<h2>Cancel Appointment</h2>
-<form id="cancelForm">
-<label for="cancelEmail">Email</label>
-<input type="email" id="cancelEmail" required>
-
-<label for="cancelDate">Date</label>
-<input type="text" id="cancelDate" placeholder="Select a date" required>
-
-<label for="cancelTime">Time</label>
-<select id="cancelTime" required>
-<option value="12:00">12 PM</option>
-</select>
-
-<button type="submit">Cancel Appointment</button>
-</form>
-</div>
-
 <footer>© 2025 PixelNailz</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyUqh_l2OcpEopSqX_I1uMwCtBf1mdvDxqaBJ46tTzpgnkH9Xdpq0JUfi7RB_6ZEu5E/exec"; // Replace with your Apps Script URL
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyUqh_l2OcpEopSqX_I1uMwCtBf1mdvDxqaBJ46tTzpgnkH9Xdpq0JUfi7RB_6ZEu5E/exec"; // Replace with your Apps Script Web App URL
 
 // Show length field only for Acrylic Full Set
 document.getElementById("service").addEventListener("change", function() {
@@ -123,9 +104,6 @@ async function getBookedDates() {
   flatpickr("#date", { dateFormat:"Y-m-d", enable: availableDates });
 })();
 
-// Initialize cancel datepicker
-flatpickr("#cancelDate", { dateFormat:"Y-m-d", enable: allowedDates });
-
 // Booking form
 document.getElementById("bookingForm").addEventListener("submit", function(e) {
 e.preventDefault();
@@ -145,23 +123,6 @@ time: "12:00"
 .then(res => res.json())
 .then(data => alert(data.message))
 .catch(()=>alert("Error booking appointment"));
-});
-
-// Cancel form
-document.getElementById("cancelForm").addEventListener("submit", function(e) {
-e.preventDefault();
-fetch(WEB_APP_URL, {
-method:"POST",
-body: JSON.stringify({
-action:"cancel",
-email: document.getElementById("cancelEmail").value,
-date: document.getElementById("cancelDate").value,
-time: "12:00"
-})
-})
-.then(res => res.json())
-.then(data => alert(data.message))
-.catch(()=>alert("Error cancelling appointment"));
 });
 </script>
 </body>
