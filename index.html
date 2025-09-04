@@ -1,63 +1,36 @@
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyUqh_l2OcpEopSqX_I1uMwCtBf1mdvDxqaBJ46tTzpgnkH9Xdpq0JUfi7RB_6ZEu5E/exec";
-
-// allowed booking dates
-const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
-
-let bookingPicker; // keep reference to flatpickr
-
-async function getBookedDates() {
+// Initialize booking datepicker with greyed-out booked dates
+let bookingPicker;
+async function initBookingDatepicker() {
   try {
-    const res = await fetch(WEB_APP_URL, {
-      method:"POST",
-      body: JSON.stringify({action:"fetch"})
+    const response = await fetch(WEB_APP_URL + "?action=fetch");
+    const data = await response.json();
+    const bookedDates = (data.bookings || []).map(b => b.date);
+
+    if(bookingPicker) bookingPicker.destroy();
+
+    bookingPicker = flatpickr("#date", {
+      dateFormat: "Y-m-d",
+      minDate: "today",
+      disableMobile: true,
+      // show all allowed dates, but disable booked ones
+      enable: allowedDates.map(d => {
+        return bookedDates.includes(d) ? { from: d, to: d, disabled: true, className: "booked-date" } : d;
+      })
     });
-    const data = await res.json();
-    return data.bookings.map(b => b.date);
-  } catch {
-    return [];
+  } catch(e) {
+    console.error(e);
   }
 }
-
-// initialize booking calendar
-async function initBookingCalendar() {
-  const booked = await getBookedDates();
-  const available = allowedDates.filter(d => !booked.includes(d));
-
-  if (bookingPicker) bookingPicker.destroy(); // reset if exists
-  bookingPicker = flatpickr("#date", {
-    dateFormat:"Y-m-d",
-    enable: available
-  });
-}
-
-// initialize cancel calendar (doesn’t change)
-flatpickr("#cancelDate", { dateFormat:"Y-m-d", enable: allowedDates });
-
-// load calendar on page load
-initBookingCalendar();
-
-// booking form
-document.getElementById("bookingForm").addEventListener("submit", async e=>{
-  e.preventDefault();
-  const payload = {
-    action:"book",
-    name:document.getElementById("name").value,
-    phone:document.getElementById("phone").value,
-    email:document.getElementById("email").value,
-    service:document.getElementById("service").value,
-    length:document.getElementById("service").value==="Acrylic Full Set"?document.getElementById("length").value:"N/A",
-    date:document.getElementById("date").value,
-    time:document.getElementById("time").value
-  };
-
-  const res = await fetch(WEB_APP_URL, {method:"POST", body: JSON.stringify(payload)});
-  const data = await res.json();
-  alert(data.message);
-
-  if (data.status === "success") {
-    await initBookingCalendar(); // refresh calendar after successful booking
-  }
-});
+initBookingDatepicker();
 </script>
+
+<style>
+/* Grey out already booked dates */
+.booked-date {
+  background: #ddd !important;
+  color: #999 !important;
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+</style>
