@@ -74,7 +74,7 @@ After booking, please DM <b>@pixelnailz</b> on Instagram for the e-transfer emai
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyUqh_l2OcpEopSqX_I1uMwCtBf1mdvDxqaBJ46tTzpgnkH9Xdpq0JUfi7RB_6ZEu5E/exec";
+const WEB_APP_URL = "YOUR_DEPLOYED_SCRIPT_URL"; // replace with your Apps Script Web App URL
 
 // Show length field only for Acrylic Full Set
 document.getElementById("service").addEventListener("change", function() {
@@ -83,32 +83,43 @@ document.getElementById("service").addEventListener("change", function() {
   else lengthField.classList.add("hidden");
 });
 
-// Allowed September dates
-const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
+// Allowed booking dates (edit as needed)
+const allowedDates = [
+  "2025-09-07",
+  "2025-09-13",
+  "2025-09-14",
+  "2025-09-20",
+  "2025-09-21",
+  "2025-09-27",
+  "2025-09-28"
+];
 
 // Fetch booked dates from Apps Script
 async function getBookedDates() {
   try {
     const response = await fetch(WEB_APP_URL + "?action=fetch");
     const data = await response.json();
-    return data.booked || []; // backend returns booked: []
-  } catch(e) {
+    return data.booked || [];
+  } catch (e) {
+    console.error("Error fetching booked dates", e);
     return [];
   }
 }
 
-// Initialize booking datepicker
+// Initialize booking calendar
 async function initBookingDatepicker() {
   const bookedDates = await getBookedDates();
-  const availableDates = allowedDates.filter(d => !bookedDates.includes(d));
+
   flatpickr("#date", {
-    dateFormat:"Y-m-d",
-    enable: availableDates
+    dateFormat: "Y-m-d",
+    enable: allowedDates,   // only allow your chosen days
+    disable: bookedDates,   // grey out already booked ones
+    minDate: "today"
   });
 }
 initBookingDatepicker();
 
-// Booking form
+// Booking form submission
 document.getElementById("bookingForm").addEventListener("submit", async function(e){
   e.preventDefault();
   const bookingData = {
@@ -128,8 +139,7 @@ document.getElementById("bookingForm").addEventListener("submit", async function
     alert(data.message);
 
     if(data.status === "success") {
-      // Refresh available dates after booking
-      await initBookingDatepicker();
+      await initBookingDatepicker(); // refresh after booking
     }
   } catch {
     alert("Error booking appointment");
