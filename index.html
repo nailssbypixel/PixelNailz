@@ -7,7 +7,7 @@
 <style>
 body {
   font-family: Arial, sans-serif;
-  background: #ffe6f0; /* light pink background */
+  background: #ffe6f0; /* light pink */
   margin: 0;
   padding: 0;
 }
@@ -106,26 +106,25 @@ footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; backgr
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-const WEB_APP_URL = "YOUR_WEB_APP_URL_HERE"; // Replace with your Apps Script URL
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyUqh_l2OcpEopSqX_I1uMwCtBf1mdvDxqaBJ46tTzpgnkH9Xdpq0JUfi7RB_6ZEu5E/exec"; // replace with your Apps Script URL
 const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
 
+let fpInstance;
+
+// Show length field only for Acrylic Full Set
 document.getElementById("service").addEventListener("change", function() {
   const lengthField = document.getElementById("lengthField");
   this.value === "Acrylic Full Set" ? lengthField.classList.remove("hidden") : lengthField.classList.add("hidden");
 });
 
-let fpInstance; // Flatpickr instance
-
-// Initialize or refresh booking calendar
+// Initialize or refresh calendar
 async function initBookingCalendar() {
   try {
     const res = await fetch(WEB_APP_URL + "?action=fetch");
     const data = await res.json();
     const bookedDates = data.booked || [];
-
     const availableDates = allowedDates.filter(d => !bookedDates.includes(d));
 
-    // Destroy old instance if exists
     if(fpInstance) fpInstance.destroy();
 
     fpInstance = flatpickr("#date", {
@@ -134,16 +133,17 @@ async function initBookingCalendar() {
       minDate: "today"
     });
 
-  } catch (err) {
-    console.error("Failed to fetch booked dates:", err);
+  } catch(err) {
+    console.error("Error fetching dates:", err);
     if(fpInstance) fpInstance.destroy();
     fpInstance = flatpickr("#date", { dateFormat:"Y-m-d", enable: allowedDates, minDate: "today" });
   }
 }
 
+// Call on page load
 initBookingCalendar();
 
-// Booking submission
+// Booking form submission
 document.getElementById("bookingForm").addEventListener("submit", async function(e){
   e.preventDefault();
   const msgDiv = document.getElementById("bookingMessage");
@@ -172,7 +172,7 @@ document.getElementById("bookingForm").addEventListener("submit", async function
       msgDiv.innerText = data.message;
       this.reset();
       document.getElementById("lengthField").classList.add("hidden");
-      await initBookingCalendar(); // Refresh calendar and grey out newly booked dates
+      await initBookingCalendar(); // refresh calendar to grey out booked date
     } else {
       msgDiv.className = "error";
       msgDiv.innerText = data.message;
