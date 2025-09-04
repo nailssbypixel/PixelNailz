@@ -1,166 +1,81 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>PixelNailz Booking</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<style>
-body { font-family: Arial, sans-serif; background: #f8f8f8; margin:0; padding:0; }
-header { background: #ff66a3; color: white; text-align: center; padding: 1.5rem; font-size: 2rem; font-weight: bold; letter-spacing: 1px; }
-.container { max-width: 600px; margin: 30px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-h2 { text-align: center; color: #d63384; }
-label { margin:8px 0 4px; font-weight:bold; display:block; }
-input, select, button { width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; margin-bottom:12px; font-size:1em; box-sizing:border-box; }
-button { background:#d63384; color:white; border:none; cursor:pointer; font-weight:bold; }
-button:hover { background:#b82c6d; }
-.note { font-size:0.9em; color:#555; text-align:center; margin:10px 0 20px; }
-.hidden { display:none; }
-footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; background:#f8f8f8; margin-top:40px; }
-</style>
-</head>
-<body>
+<html>
+  <head>
+    <base target="_top">
+    <script>
+      let availableDates = [];
 
-<header>PixelNailz Booking</header>
+      // Fetch available/booked dates
+      function fetchDates() {
+        google.script.run.withSuccessHandler(data => {
+          availableDates = data.available;
+          populateDatePicker();
+        }).doGet({action: 'fetch'});
+      }
 
-<div class="container">
-  <h2>Book Your Appointment</h2>
-  <form id="bookingForm">
-    <label for="name">Full Name</label>
-    <input id="name" type="text" required>
+      function populateDatePicker() {
+        const dateInput = document.getElementById('date');
+        const today = new Date();
+        dateInput.min = today.toISOString().split('T')[0];
 
-    <label for="phone">Phone Number</label>
-    <input id="phone" type="tel" required>
+        dateInput.addEventListener('input', function() {
+          const selected = this.value;
+          if (!availableDates.includes(selected)) {
+            alert("This date is not available. Please select another.");
+            this.value = '';
+          }
+        });
+      }
 
-    <label for="email">Email</label>
-    <input id="email" type="email" required>
+      function bookAppointment() {
+        const name = document.getElementById('name').value;
+        const email = document.getElementById('email').value;
+        const phone = document.getElementById('phone').value;
+        const service = document.getElementById('service').value;
+        const date = document.getElementById('date').value;
+        const time = document.getElementById('time').value;
+        const length = document.getElementById('length').value;
 
-    <label for="service">Service</label>
-    <select id="service" required>
-      <option value="">Select a service</option>
-      <option value="Gel Manicure">Gel Manicure</option>
-      <option value="Regular Manicure">Regular Manicure</option>
-      <option value="Acrylic Full Set">Acrylic Full Set</option>
-      <option value="Acrylic Fill">Acrylic Fill</option>
-    </select>
+        google.script.run.withSuccessHandler(response => {
+          alert(response.message);
+          if (response.status === 'success') {
+            document.getElementById('bookingForm').reset();
+            fetchDates(); // refresh available dates
+          }
+        }).doPost(JSON.stringify({
+          action: 'book',
+          name, email, phone, service, date, time, length
+        }));
+      }
 
-    <div id="lengthField" class="hidden">
-      <label for="length">Length</label>
-      <select id="length">
-        <option value="Short">Short</option>
-        <option value="Medium">Medium</option>
-        <option value="Long">Long</option>
-        <option value="Extra Long">Extra Long</option>
-      </select>
-    </div>
+      window.onload = fetchDates;
+    </script>
+  </head>
+  <body>
+    <h2>PixelNailz Booking</h2>
+    <form id="bookingForm" onsubmit="event.preventDefault(); bookAppointment();">
+      <label>Name:</label><br>
+      <input type="text" id="name" required><br><br>
 
-    <label for="date">Date</label>
-    <input id="date" type="text" placeholder="Select a date" required>
+      <label>Email:</label><br>
+      <input type="email" id="email" required><br><br>
 
-    <label for="time">Time</label>
-    <select id="time" required>
-      <option value="">-- Choose a time --</option>
-      <option value="10:00 AM">10:00 AM</option>
-      <option value="11:00 AM">11:00 AM</option>
-      <option value="12:00 PM">12:00 PM</option>
-      <option value="1:00 PM">1:00 PM</option>
-      <option value="2:00 PM">2:00 PM</option>
-      <option value="3:00 PM">3:00 PM</option>
-      <option value="4:00 PM">4:00 PM</option>
-      <option value="5:00 PM">5:00 PM</option>
-      <option value="6:00 PM">6:00 PM</option>
-    </select>
+      <label>Phone:</label><br>
+      <input type="text" id="phone" required><br><br>
 
-    <button type="submit">Book Appointment</button>
-  </form>
+      <label>Service:</label><br>
+      <input type="text" id="service" required><br><br>
 
-  <div class="note">After booking, please DM <b>@pixelnailz</b> on Instagram for the e-transfer email and to send your inspo pic 💖</div>
-</div>
+      <label>Date:</label><br>
+      <input type="date" id="date" required><br><br>
 
-<footer>© 2025 PixelNailz</footer>
+      <label>Time:</label><br>
+      <input type="time" id="time" required><br><br>
 
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script>
-const WEB_APP_URL = "YOUR_DEPLOYED_WEB_APP_URL"; // replace with your deployed Apps Script URL
+      <label>Length:</label><br>
+      <input type="text" id="length" value="N/A"><br><br>
 
-// === Service length toggle ===
-document.getElementById('service').addEventListener('change', (e) => {
-  document.getElementById('lengthField').classList.toggle('hidden', e.target.value !== 'Acrylic Full Set');
-});
-
-// === Fetch booked slots from server ===
-async function fetchBookedSlots() {
-  try {
-    const res = await fetch(WEB_APP_URL + "?action=fetch");
-    const data = await res.json();
-    return data.booked || [];
-  } catch (err) {
-    console.error("fetchBookedSlots error", err);
-    return [];
-  }
-}
-
-const dateInput = document.querySelector("#date");
-const timeSelect = document.querySelector("#time");
-
-async function updateTimeOptions() {
-  const chosenDate = dateInput.value;
-  if (!chosenDate) return;
-
-  const booked = await fetchBookedSlots();
-
-  const bookedTimes = booked
-    .filter(b => b.date === chosenDate)
-    .map(b => b.time);
-
-  [...timeSelect.options].forEach(opt => {
-    if (opt.value && bookedTimes.includes(opt.value)) {
-      opt.disabled = true;
-      opt.textContent = `${opt.value} (Booked)`;
-    } else {
-      opt.disabled = false;
-      opt.textContent = opt.value;
-    }
-  });
-}
-
-dateInput.addEventListener("change", updateTimeOptions);
-setInterval(updateTimeOptions, 30000); // auto-refresh every 30s
-
-// === Date picker init ===
-flatpickr("#date", { dateFormat: "Y-m-d", minDate: "today" });
-
-// === Booking submit ===
-document.getElementById('bookingForm').addEventListener('submit', async (ev) => {
-  ev.preventDefault();
-  const payload = {
-    action: 'book',
-    name: document.getElementById('name').value.trim(),
-    phone: document.getElementById('phone').value.trim(),
-    email: document.getElementById('email').value.trim(),
-    service: document.getElementById('service').value,
-    length: document.getElementById('service').value === 'Acrylic Full Set' ? document.getElementById('length').value : 'N/A',
-    date: document.getElementById('date').value,
-    time: document.getElementById('time').value
-  };
-  if (!payload.date || !payload.time) { alert('Please select date and time'); return; }
-
-  try {
-    const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
-    const json = await res.json();
-
-    if (json.status === 'success') {
-      alert(json.message || 'Booked!');
-      await updateTimeOptions();
-    } else {
-      alert(json.message || 'Booking failed');
-      await updateTimeOptions();
-    }
-  } catch (err) {
-    console.error('booking error', err);
-    alert('Error booking appointment');
-    await updateTimeOptions();
-  }
-});
-</script>
-</body>
+      <button type="submit">Book</button>
+    </form>
+  </body>
 </html>
