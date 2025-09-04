@@ -71,24 +71,23 @@ footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; backgr
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-const WEB_APP_URL = "YOUR_DEPLOYED_WEB_APP_URL"; // <- replace with your deployed Apps Script URL
+const WEB_APP_URL = "YOUR_DEPLOYED_WEB_APP_URL"; // Replace with your Google Apps Script web app URL
 
-// Allowed dates you want visible (edit as needed)
+// Only allow bookings on these days
 const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
 
 let fp = null;
 
-// length show/hide
+// Show "Length" only if "Acrylic Full Set"
 document.getElementById('service').addEventListener('change', (e) => {
   document.getElementById('lengthField').classList.toggle('hidden', e.target.value !== 'Acrylic Full Set');
 });
 
-// fetch bookings from server (returns { bookings: [ {date, time}, ... ] })
+// Fetch booked dates from Google Sheets
 async function fetchBookings() {
   try {
     const res = await fetch(WEB_APP_URL + '?action=fetch');
     const json = await res.json();
-    console.log('fetchBookings ->', json);
     return Array.isArray(json.bookings) ? json.bookings : [];
   } catch (err) {
     console.error('fetchBookings error', err);
@@ -96,24 +95,27 @@ async function fetchBookings() {
   }
 }
 
-// (re)initialize flatpickr to only allow available dates
+// Initialize datepicker with available dates only
 async function initDatepicker(bookingsInput) {
   const bookings = bookingsInput || await fetchBookings();
   const bookedDates = bookings.map(b => String(b.date));
   const available = allowedDates.filter(d => !bookedDates.includes(d));
-  console.log('allowedDates', allowedDates, 'bookedDates', bookedDates, 'available', available);
 
   if (fp) {
-    try { fp.destroy(); } catch(e) {}
+    fp.destroy();
     document.getElementById('date').value = '';
   }
-  fp = flatpickr("#date", { dateFormat: "Y-m-d", enable: available, minDate: "today" });
+  fp = flatpickr("#date", {
+    dateFormat: "Y-m-d",
+    enable: available,
+    minDate: "today"
+  });
 }
 
-// initial init
+// Initial load
 initDatepicker();
 
-// booking submit
+// Handle booking submit
 document.getElementById('bookingForm').addEventListener('submit', async (ev) => {
   ev.preventDefault();
   const payload = {
@@ -131,18 +133,13 @@ document.getElementById('bookingForm').addEventListener('submit', async (ev) => 
   try {
     const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
     const json = await res.json();
-    console.log('booking response', json);
 
     if (json.status === 'success') {
       alert(json.message || 'Booked!');
-      // If server returned updated bookings array, re-init using it; else re-fetch
-      if (Array.isArray(json.bookings)) await initDatepicker(json.bookings);
-      else await initDatepicker();
+      await initDatepicker(json.bookings || null);
     } else {
       alert(json.message || 'Booking failed');
-      // refresh calendar using server's authoritative list if provided
-      if (Array.isArray(json.bookings)) await initDatepicker(json.bookings);
-      else await initDatepicker();
+      await initDatepicker(json.bookings || null);
     }
   } catch (err) {
     console.error('booking error', err);
