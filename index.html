@@ -5,12 +5,19 @@
 <title>PixelNailz Booking</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background: #ffe6f0; /* light pink */
+html, body {
+  height: 100%;
   margin: 0;
   padding: 0;
 }
+
+body {
+  display: flex;
+  flex-direction: column;
+  background: #ffe6f0; /* light pink */
+  font-family: Arial, sans-serif;
+}
+
 header {
   background: #ff66a3;
   color: white;
@@ -19,6 +26,7 @@ header {
   font-size: 2rem;
   font-weight: bold;
 }
+
 .container {
   max-width: 600px;
   margin: 30px auto;
@@ -26,10 +34,15 @@ header {
   padding: 25px;
   border-radius: 12px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  flex: 1; /* allows container to grow and push footer down */
 }
+
 h2 { text-align: center; color: #d63384; }
+
 form { display:flex; flex-direction: column; margin-top:20px; }
+
 label { margin:8px 0 4px; font-weight:bold; }
+
 input, select, button {
   padding:10px;
   border:1px solid #ccc;
@@ -37,6 +50,7 @@ input, select, button {
   margin-bottom:12px;
   font-size:1em;
 }
+
 button {
   background:#d63384;
   color:white;
@@ -44,10 +58,23 @@ button {
   cursor:pointer;
   font-weight:bold;
 }
+
 button:hover { background:#b82c6d; }
+
 .hidden { display:none; }
-.note { font-size:0.9em; color:#555; text-align:center; margin:10px 0 20px; }
-footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; background:#ffe6f0; margin-top:40px; }
+
+.footer-note {
+  font-weight: bold;
+  margin-top: 20px;
+}
+
+footer {
+  text-align:center;
+  font-size:0.85em;
+  color:#888;
+  padding:15px 0;
+  background:#ffe6f0;
+}
 .success { color: green; text-align: center; margin-bottom: 12px; }
 .error { color: red; text-align: center; margin-bottom: 12px; }
 </style>
@@ -57,61 +84,63 @@ footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; backgr
 <header>PixelNailz Booking</header>
 
 <div class="container">
-<h2>Book Your Appointment</h2>
-<div id="bookingMessage"></div>
-<form id="bookingForm">
+  <h2>Book Your Appointment</h2>
+  <div id="bookingMessage"></div>
+  <form id="bookingForm">
 
-<label for="name">Full Name</label>
-<input type="text" id="name" required>
+    <label for="name">Full Name</label>
+    <input type="text" id="name" required>
 
-<label for="phone">Phone Number</label>
-<input type="tel" id="phone" required>
+    <label for="phone">Phone Number</label>
+    <input type="tel" id="phone" required>
 
-<label for="email">Email</label>
-<input type="email" id="email" required>
+    <label for="email">Email</label>
+    <input type="email" id="email" required>
 
-<label for="service">Service</label>
-<select id="service" required>
-<option value="">Select a service</option>
-<option value="Gel Manicure">Gel Manicure</option>
-<option value="Regular Manicure">Regular Manicure</option>
-<option value="Acrylic Full Set">Acrylic Full Set</option>
-<option value="Acrylic Fill">Acrylic Fill</option>
-</select>
+    <label for="service">Service</label>
+    <select id="service" required>
+      <option value="">Select a service</option>
+      <option value="Gel Manicure">Gel Manicure</option>
+      <option value="Regular Manicure">Regular Manicure</option>
+      <option value="Acrylic Full Set">Acrylic Full Set</option>
+      <option value="Acrylic Fill">Acrylic Fill</option>
+    </select>
 
-<div id="lengthField" class="hidden">
-<label for="length">Length</label>
-<select id="length">
-<option value="Short">Short</option>
-<option value="Medium">Medium</option>
-<option value="Long">Long</option>
-<option value="Extra Long">Extra Long</option>
-</select>
-</div>
+    <div id="lengthField" class="hidden">
+      <label for="length">Length</label>
+      <select id="length">
+        <option value="Short">Short</option>
+        <option value="Medium">Medium</option>
+        <option value="Long">Long</option>
+        <option value="Extra Long">Extra Long</option>
+      </select>
+    </div>
 
-<label for="date">Date</label>
-<input type="text" id="date" placeholder="Select a date" required>
+    <label for="date">Date</label>
+    <input type="text" id="date" placeholder="Select a date" required>
 
-<label for="time">Time</label>
-<select id="time" required>
-<option value="12:00 PM">12:00 PM</option>
-</select>
+    <label for="time">Time</label>
+    <select id="time" required>
+      <option value="12:00 PM">12:00 PM</option>
+    </select>
 
-<button type="submit">Book Appointment</button>
-</form>
-<div class="footer-note">
-  <strong>After booking, please DM @pixelnails for the following:</strong>
-  <ol>
-    <li>Get e-transfer email to send your <strong>$10 NON-REFUNDABLE deposit</strong> within 24 hours (otherwise appointment will be cancelled)</li>
-    <li>Send your inspo pic! 💖</li>
-  </ol>
+    <button type="submit">Book Appointment</button>
+  </form>
+
+  <div class="footer-note">
+    <strong>After booking, please DM @pixelnails for the following:</strong>
+    <ol>
+      <li>Get e-transfer email to send your <strong>$10 NON-REFUNDABLE deposit</strong> within 24 hours (otherwise appointment will be cancelled)</li>
+      <li>Send your inspo pic! 💖</li>
+    </ol>
+  </div>
 </div>
 
 <footer>© 2025 PixelNailz</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyUqh_l2OcpEopSqX_I1uMwCtBf1mdvDxqaBJ46tTzpgnkH9Xdpq0JUfi7RB_6ZEu5E/exec"; // replace with your Apps Script URL
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyUqh_l2OcpEopSqX_I1uMwCtBf1mdvDxqaBJ46tTzpgnkH9Xdpq0JUfi7RB_6ZEu5E/exec";
 const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
 
 let fpInstance;
