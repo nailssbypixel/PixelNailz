@@ -109,38 +109,76 @@ footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; backgr
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
+const WEB_APP_URL = "YOUR_WEB_APP_URL_HERE"; // replace with your Apps Script web app URL
 const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
 
-// Show length field only for Acrylic Full Set
 document.getElementById("service").addEventListener("change", function() {
   const lengthField = document.getElementById("lengthField");
   this.value === "Acrylic Full Set" ? lengthField.classList.remove("hidden") : lengthField.classList.add("hidden");
 });
 
-// Initialize Flatpickr with allowed dates
-flatpickr("#date", {
-  dateFormat: "Y-m-d",
-  enable: allowedDates,
-  minDate: "today"
-});
+// Fetch booked dates and initialize calendar
+async function initBookingCalendar() {
+  try {
+    const res = await fetch(WEB_APP_URL + "?action=fetch");
+    const data = await res.json();
+    const bookedDates = data.booked || []; // booked dates from Google Sheet
+
+    // Enable only allowed dates that are not booked
+    const availableDates = allowedDates.filter(d => !bookedDates.includes(d));
+
+    flatpickr("#date", {
+      dateFormat: "Y-m-d",
+      enable: availableDates,
+      minDate: "today"
+    });
+  } catch (err) {
+    console.error("Failed to fetch booked dates:", err);
+    // fallback: show all allowed dates
+    flatpickr("#date", { dateFormat:"Y-m-d", enable: allowedDates, minDate: "today" });
+  }
+}
+initBookingCalendar();
 
 // Booking submission
-document.getElementById("bookingForm").addEventListener("submit", function(e) {
+document.getElementById("bookingForm").addEventListener("submit", async function(e){
   e.preventDefault();
   const msgDiv = document.getElementById("bookingMessage");
   msgDiv.innerHTML = "";
-  
-  const selectedDate = document.getElementById("date").value;
-  if (!allowedDates.includes(selectedDate)) {
-    msgDiv.className = "error";
-    msgDiv.innerText = "Please select a valid date from the list.";
-    return;
-  }
 
-  msgDiv.className = "success";
-  msgDiv.innerText = "Booking submitted successfully!";  
-  this.reset();
-  document.getElementById("lengthField").classList.add("hidden");
+  const formData = {
+    action: "book",
+    name: document.getElementById("name").value,
+    phone: document.getElementById("phone").value,
+    email: document.getElementById("email").value,
+    service: document.getElementById("service").value,
+    length: document.getElementById("length").value,
+    date: document.getElementById("date").value,
+    time: document.getElementById("time").value
+  };
+
+  try {
+    const response = await fetch(WEB_APP_URL, {
+      method: "POST",
+      body: JSON.stringify(formData)
+    });
+    const data = await response.json();
+
+    if(data.status === "success") {
+      msgDiv.className = "success";
+      msgDiv.innerText = data.message;
+      initBookingCalendar(); // refresh calendar
+      this.reset();
+      document.getElementById("lengthField").classList.add("hidden");
+    } else {
+      msgDiv.className = "error";
+      msgDiv.innerText = data.message;
+    }
+
+  } catch(err) {
+    msgDiv.className = "error";
+    msgDiv.innerText = "Error submitting booking. Try again.";
+  }
 });
 </script>
 </body>
