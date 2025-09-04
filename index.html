@@ -1,81 +1,125 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <base target="_top">
-    <script>
-      let availableDates = [];
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PixelNailz Booking</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+body { font-family: Arial, sans-serif; background: #f8f8f8; margin:0; padding:0; }
+header { background: #ff66a3; color: white; text-align: center; padding: 1.5rem; font-size: 2rem; font-weight: bold; }
+.container { max-width: 600px; margin: 30px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+h2 { text-align: center; color: #d63384; }
+form { display:flex; flex-direction: column; margin-top:20px; }
+label { margin:8px 0 4px; font-weight:bold; }
+input, select, button { padding:10px; border:1px solid #ccc; border-radius:6px; margin-bottom:12px; font-size:1em; }
+button { background:#d63384; color:white; border:none; cursor:pointer; font-weight:bold; }
+button:hover { background:#b82c6d; }
+.hidden { display:none; }
+.note { font-size:0.9em; color:#555; text-align:center; margin:10px 0 20px; }
+footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; background:#f8f8f8; margin-top:40px; }
+</style>
+</head>
+<body>
 
-      // Fetch available/booked dates
-      function fetchDates() {
-        google.script.run.withSuccessHandler(data => {
-          availableDates = data.available;
-          populateDatePicker();
-        }).doGet({action: 'fetch'});
-      }
+<header>PixelNailz Booking</header>
 
-      function populateDatePicker() {
-        const dateInput = document.getElementById('date');
-        const today = new Date();
-        dateInput.min = today.toISOString().split('T')[0];
+<div class="container" id="bookContainer">
+<h2>Book Your Appointment</h2>
+<form id="bookingForm">
+<label for="name">Full Name</label>
+<input type="text" id="name" required>
 
-        dateInput.addEventListener('input', function() {
-          const selected = this.value;
-          if (!availableDates.includes(selected)) {
-            alert("This date is not available. Please select another.");
-            this.value = '';
-          }
-        });
-      }
+<label for="phone">Phone Number</label>
+<input type="tel" id="phone" required>
 
-      function bookAppointment() {
-        const name = document.getElementById('name').value;
-        const email = document.getElementById('email').value;
-        const phone = document.getElementById('phone').value;
-        const service = document.getElementById('service').value;
-        const date = document.getElementById('date').value;
-        const time = document.getElementById('time').value;
-        const length = document.getElementById('length').value;
+<label for="email">Email</label>
+<input type="email" id="email" required>
 
-        google.script.run.withSuccessHandler(response => {
-          alert(response.message);
-          if (response.status === 'success') {
-            document.getElementById('bookingForm').reset();
-            fetchDates(); // refresh available dates
-          }
-        }).doPost(JSON.stringify({
-          action: 'book',
-          name, email, phone, service, date, time, length
-        }));
-      }
+<label for="service">Service</label>
+<select id="service" required>
+<option value="">Select a service</option>
+<option value="Gel Manicure">Gel Manicure</option>
+<option value="Regular Manicure">Regular Manicure</option>
+<option value="Acrylic Full Set">Acrylic Full Set</option>
+<option value="Acrylic Fill">Acrylic Fill</option>
+</select>
 
-      window.onload = fetchDates;
-    </script>
-  </head>
-  <body>
-    <h2>PixelNailz Booking</h2>
-    <form id="bookingForm" onsubmit="event.preventDefault(); bookAppointment();">
-      <label>Name:</label><br>
-      <input type="text" id="name" required><br><br>
+<div id="lengthField" class="hidden">
+<label for="length">Length</label>
+<select id="length">
+<option value="Short">Short</option>
+<option value="Medium">Medium</option>
+<option value="Long">Long</option>
+<option value="Extra Long">Extra Long</option>
+</select>
+</div>
 
-      <label>Email:</label><br>
-      <input type="email" id="email" required><br><br>
+<label for="date">Date</label>
+<input type="text" id="date" placeholder="Select a date" required>
 
-      <label>Phone:</label><br>
-      <input type="text" id="phone" required><br><br>
+<label for="time">Time</label>
+<select id="time" required>
+<option value="12:00 PM">12:00 PM</option>
+</select>
 
-      <label>Service:</label><br>
-      <input type="text" id="service" required><br><br>
+<button type="submit">Book Appointment</button>
+</form>
+<div class="note">After booking, please DM <b>@pixelnailz</b> on Instagram for e-transfer and inspo pic 💖</div>
+</div>
 
-      <label>Date:</label><br>
-      <input type="date" id="date" required><br><br>
+<div class="container" id="cancelContainer">
+<h2>Cancel Appointment</h2>
+<form id="cancelForm">
+<label for="cancelEmail">Email</label>
+<input type="email" id="cancelEmail" required>
 
-      <label>Time:</label><br>
-      <input type="time" id="time" required><br><br>
+<label for="cancelDate">Date</label>
+<input type="text" id="cancelDate" placeholder="Select a date" required>
 
-      <label>Length:</label><br>
-      <input type="text" id="length" value="N/A"><br><br>
+<label for="cancelTime">Time</label>
+<select id="cancelTime" required>
+<option value="12:00 PM">12:00 PM</option>
+</select>
 
-      <button type="submit">Book</button>
-    </form>
-  </body>
-</html>
+<button type="submit">Cancel Appointment</button>
+</form>
+</div>
+
+<footer>© 2025 PixelNailz</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyUqh_l2OcpEopSqX_I1uMwCtBf1mdvDxqaBJ46tTzpgnkH9Xdpq0JUfi7RB_6ZEu5E/exec";
+
+// Show length field only for Acrylic Full Set
+document.getElementById("service").addEventListener("change", function() {
+  const lengthField = document.getElementById("lengthField");
+  this.value === "Acrylic Full Set" ? lengthField.classList.remove("hidden") : lengthField.classList.add("hidden");
+});
+
+const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
+
+// Fetch booked dates
+async function getBookedDates() {
+  try {
+    const response = await fetch(WEB_APP_URL + "?action=fetch");
+    const data = await response.json();
+    const booked = data.bookings || [];
+    return booked.map(b => b.date);
+  } catch {
+    return [];
+  }
+}
+
+// Initialize datepicker
+async function initBookingDatepicker() {
+  const bookedDates = await getBookedDates();
+  const availableDates = allowedDates.filter(d => !bookedDates.includes(d));
+  flatpickr("#date", { dateFormat:"Y-m-d", enable: availableDates });
+}
+initBookingDatepicker();
+flatpickr("#cancelDate", { dateFormat:"Y-m-d", enable: allowedDates });
+
+// Booking submission
+document.getElementById("bookingForm").addEventListener("submit", async function(e){
+  e.preventDefault
