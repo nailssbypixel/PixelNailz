@@ -14,7 +14,6 @@ html, body {
 body {
   display: flex;
   flex-direction: column;
-  min-height: 100vh; /* full viewport height */
   background: #ffe6f0; /* light pink */
   font-family: Arial, sans-serif;
 }
@@ -35,7 +34,7 @@ header {
   padding: 25px;
   border-radius: 12px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  flex: 1; /* container takes remaining space */
+  flex: 1; /* allows container to grow and push footer down */
 }
 
 h2 { text-align: center; color: #d63384; }
@@ -66,8 +65,6 @@ button:hover { background:#b82c6d; }
 
 .footer-note {
   margin-top: 20px;
-  font-size: 0.95em;
-  color: #555;
 }
 
 footer {
@@ -77,6 +74,7 @@ footer {
   padding:15px 0;
   background:#ffe6f0;
 }
+
 .success { color: green; text-align: center; margin-bottom: 12px; }
 .error { color: red; text-align: center; margin-bottom: 12px; }
 </style>
@@ -135,6 +133,7 @@ footer {
       <li>Get e-transfer email to send your <strong>$10 NON-REFUNDABLE</strong> deposit within 24 hours (otherwise appointment will be cancelled)</li>
       <li>Send your inspo pic! 💖</li>
     </ol>
+    <p><strong>Cancellations: Please DM if you would like to cancel an appointment</strong></p>
   </div>
 </div>
 
@@ -147,11 +146,13 @@ const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-
 
 let fpInstance;
 
+// Show length field only for Acrylic Full Set
 document.getElementById("service").addEventListener("change", function() {
   const lengthField = document.getElementById("lengthField");
   this.value === "Acrylic Full Set" ? lengthField.classList.remove("hidden") : lengthField.classList.add("hidden");
 });
 
+// Initialize or refresh calendar
 async function initBookingCalendar() {
   try {
     const res = await fetch(WEB_APP_URL + "?action=fetch");
@@ -174,8 +175,10 @@ async function initBookingCalendar() {
   }
 }
 
+// Call on page load
 initBookingCalendar();
 
+// Booking form submission
 document.getElementById("bookingForm").addEventListener("submit", async function(e){
   e.preventDefault();
   const msgDiv = document.getElementById("bookingMessage");
@@ -204,7 +207,7 @@ document.getElementById("bookingForm").addEventListener("submit", async function
       msgDiv.innerText = data.message;
       this.reset();
       document.getElementById("lengthField").classList.add("hidden");
-      await initBookingCalendar();
+      await initBookingCalendar(); // refresh calendar to grey out booked date
     } else {
       msgDiv.className = "error";
       msgDiv.innerText = data.message;
