@@ -9,12 +9,12 @@ body { font-family: Arial, sans-serif; background: #f8f8f8; margin:0; padding:0;
 header { background: #ff66a3; color: white; text-align: center; padding: 1.5rem; font-size: 2rem; font-weight: bold; letter-spacing: 1px; }
 .container { max-width: 600px; margin: 30px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
 h2 { text-align: center; color: #d63384; }
-form { display:flex; flex-direction: column; margin-top:20px; }
-label { margin:8px 0 4px; font-weight:bold; }
-input, select, button { padding:10px; border:1px solid #ccc; border-radius:6px; margin-bottom:12px; font-size:1em; }
+label { margin:8px 0 4px; font-weight:bold; display:block; }
+input, select, button { width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; margin-bottom:12px; font-size:1em; box-sizing:border-box; }
 button { background:#d63384; color:white; border:none; cursor:pointer; font-weight:bold; }
 button:hover { background:#b82c6d; }
 .note { font-size:0.9em; color:#555; text-align:center; margin:10px 0 20px; }
+.hidden { display:none; }
 footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; background:#f8f8f8; margin-top:40px; }
 </style>
 </head>
@@ -22,107 +22,133 @@ footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; backgr
 
 <header>PixelNailz Booking</header>
 
-<div class="container" id="bookContainer">
-<h2>Book Your Appointment</h2>
-<form id="bookingForm">
-<label for="name">Full Name</label>
-<input type="text" id="name" required>
+<div class="container">
+  <h2>Book Your Appointment (12:00 PM)</h2>
+  <form id="bookingForm">
+    <label for="name">Full Name</label>
+    <input id="name" type="text" required>
 
-<label for="phone">Phone Number</label>
-<input type="tel" id="phone" required>
+    <label for="phone">Phone Number</label>
+    <input id="phone" type="tel" required>
 
-<label for="email">Email</label>
-<input type="email" id="email" required>
+    <label for="email">Email</label>
+    <input id="email" type="email" required>
 
-<label for="service">Service</label>
-<select id="service" required>
-<option value="">Select a service</option>
-<option value="Gel Manicure">Gel Manicure</option>
-<option value="Regular Manicure">Regular Manicure</option>
-<option value="Acrylic Full Set">Acrylic Full Set</option>
-<option value="Acrylic Fill">Acrylic Fill</option>
-</select>
+    <label for="service">Service</label>
+    <select id="service" required>
+      <option value="">Select a service</option>
+      <option value="Gel Manicure">Gel Manicure</option>
+      <option value="Regular Manicure">Regular Manicure</option>
+      <option value="Acrylic Full Set">Acrylic Full Set</option>
+      <option value="Acrylic Fill">Acrylic Fill</option>
+    </select>
 
-<div id="lengthField" class="hidden">
-<label for="length">Length</label>
-<select id="length">
-<option value="Short">Short</option>
-<option value="Medium">Medium</option>
-<option value="Long">Long</option>
-<option value="Extra Long">Extra Long</option>
-</select>
-</div>
+    <div id="lengthField" class="hidden">
+      <label for="length">Length</label>
+      <select id="length">
+        <option value="Short">Short</option>
+        <option value="Medium">Medium</option>
+        <option value="Long">Long</option>
+        <option value="Extra Long">Extra Long</option>
+      </select>
+    </div>
 
-<label for="date">Date</label>
-<input type="text" id="date" placeholder="Select a date" required>
+    <label for="date">Date</label>
+    <input id="date" type="text" placeholder="Select a date" required>
 
-<label for="time">Time</label>
-<select id="time" required>
-<option value="12:00">12 PM</option>
-</select>
+    <label for="time">Time</label>
+    <select id="time" required>
+      <option value="12:00 PM">12:00 PM</option>
+    </select>
 
-<button type="submit">Book Appointment</button>
-</form>
+    <button type="submit">Book Appointment</button>
+  </form>
 
-<div class="note">
-After booking, please DM <b>@pixelnailz</b> on Instagram for the e-transfer email and to send your inspo pic 💖
-</div>
+  <div class="note">After booking, please DM <b>@pixelnailz</b> on Instagram for the e-transfer email and to send your inspo pic 💖</div>
 </div>
 
 <footer>© 2025 PixelNailz</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyUqh_l2OcpEopSqX_I1uMwCtBf1mdvDxqaBJ46tTzpgnkH9Xdpq0JUfi7RB_6ZEu5E/exec"; // Replace with your Apps Script Web App URL
+const WEB_APP_URL = "YOUR_DEPLOYED_WEB_APP_URL"; // <- replace with your deployed Apps Script URL
 
-// Show length field only for Acrylic Full Set
-document.getElementById("service").addEventListener("change", function() {
-  const lengthField = document.getElementById("lengthField");
-  if (this.value === "Acrylic Full Set") lengthField.classList.remove("hidden");
-  else lengthField.classList.add("hidden");
-});
-
-// Allowed September dates
+// Allowed dates you want visible (edit as needed)
 const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
 
-// Function to fetch booked dates
-async function getBookedDates() {
+let fp = null;
+
+// length show/hide
+document.getElementById('service').addEventListener('change', (e) => {
+  document.getElementById('lengthField').classList.toggle('hidden', e.target.value !== 'Acrylic Full Set');
+});
+
+// fetch bookings from server (returns { bookings: [ {date, time}, ... ] })
+async function fetchBookings() {
   try {
-    const response = await fetch(WEB_APP_URL + "?action=fetch");
-    const data = await response.json();
-    const booked = data.bookings || [];
-    return booked.map(b => b.date); // list of booked dates
-  } catch(e) {
+    const res = await fetch(WEB_APP_URL + '?action=fetch');
+    const json = await res.json();
+    console.log('fetchBookings ->', json);
+    return Array.isArray(json.bookings) ? json.bookings : [];
+  } catch (err) {
+    console.error('fetchBookings error', err);
     return [];
   }
 }
 
-// Initialize booking datepicker
-(async () => {
-  const bookedDates = await getBookedDates();
-  const availableDates = allowedDates.filter(d => !bookedDates.includes(d));
-  flatpickr("#date", { dateFormat:"Y-m-d", enable: availableDates });
-})();
+// (re)initialize flatpickr to only allow available dates
+async function initDatepicker(bookingsInput) {
+  const bookings = bookingsInput || await fetchBookings();
+  const bookedDates = bookings.map(b => String(b.date));
+  const available = allowedDates.filter(d => !bookedDates.includes(d));
+  console.log('allowedDates', allowedDates, 'bookedDates', bookedDates, 'available', available);
 
-// Booking form
-document.getElementById("bookingForm").addEventListener("submit", function(e) {
-e.preventDefault();
-fetch(WEB_APP_URL, {
-method:"POST",
-body: JSON.stringify({
-action:"book",
-name: document.getElementById("name").value,
-phone: document.getElementById("phone").value,
-email: document.getElementById("email").value,
-service: document.getElementById("service").value,
-length: document.getElementById("service").value==="Acrylic Full Set"? document.getElementById("length").value:"N/A",
-date: document.getElementById("date").value,
-time: "12:00"
-})
-})
-.then(res => res.json())
-.then(data => alert(data.message))
-.catch(()=>alert("Error booking appointment"));
+  if (fp) {
+    try { fp.destroy(); } catch(e) {}
+    document.getElementById('date').value = '';
+  }
+  fp = flatpickr("#date", { dateFormat: "Y-m-d", enable: available, minDate: "today" });
+}
+
+// initial init
+initDatepicker();
+
+// booking submit
+document.getElementById('bookingForm').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const payload = {
+    action: 'book',
+    name: document.getElementById('name').value.trim(),
+    phone: document.getElementById('phone').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    service: document.getElementById('service').value,
+    length: document.getElementById('service').value === 'Acrylic Full Set' ? document.getElementById('length').value : 'N/A',
+    date: document.getElementById('date').value,
+    time: document.getElementById('time').value
+  };
+  if (!payload.date) { alert('Please pick a date'); return; }
+
+  try {
+    const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+    const json = await res.json();
+    console.log('booking response', json);
+
+    if (json.status === 'success') {
+      alert(json.message || 'Booked!');
+      // If server returned updated bookings array, re-init using it; else re-fetch
+      if (Array.isArray(json.bookings)) await initDatepicker(json.bookings);
+      else await initDatepicker();
+    } else {
+      alert(json.message || 'Booking failed');
+      // refresh calendar using server's authoritative list if provided
+      if (Array.isArray(json.bookings)) await initDatepicker(json.bookings);
+      else await initDatepicker();
+    }
+  } catch (err) {
+    console.error('booking error', err);
+    alert('Error booking appointment');
+    await initDatepicker();
+  }
 });
 </script>
 </body>
