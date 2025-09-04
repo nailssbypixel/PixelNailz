@@ -1,150 +1,89 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<title>PixelNailz Booking</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<style>
-body { font-family: Arial, sans-serif; background: #f8f8f8; margin:0; padding:0; }
-header { background: #ff66a3; color: white; text-align: center; padding: 1.5rem; font-size: 2rem; font-weight: bold; letter-spacing: 1px; }
-.container { max-width: 600px; margin: 30px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-h2 { text-align: center; color: #d63384; }
-form { display:flex; flex-direction: column; margin-top:20px; }
-label { margin:8px 0 4px; font-weight:bold; }
-input, select, button { padding:10px; border:1px solid #ccc; border-radius:6px; margin-bottom:12px; font-size:1em; }
-button { background:#d63384; color:white; border:none; cursor:pointer; font-weight:bold; }
-button:hover { background:#b82c6d; }
-.note { font-size:0.9em; color:#555; text-align:center; margin:10px 0 20px; }
-.hidden { display:none; }
-footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; background:#f8f8f8; margin-top:40px; }
-</style>
+  <title>PixelNailz Booking</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </head>
 <body>
+  <h2>Book Appointment</h2>
+  <form id="bookingForm">
+    <label>Name:</label><br>
+    <input type="text" id="name" required><br><br>
 
-<header>PixelNailz Booking</header>
+    <label>Phone:</label><br>
+    <input type="text" id="phone" required><br><br>
 
-<div class="container" id="bookContainer">
-<h2>Book Your Appointment</h2>
-<form id="bookingForm">
-<label for="name">Full Name</label>
-<input type="text" id="name" required>
+    <label>Email:</label><br>
+    <input type="email" id="email"><br><br>
 
-<label for="phone">Phone Number</label>
-<input type="tel" id="phone" required>
+    <label>Service:</label><br>
+    <input type="text" id="service"><br><br>
 
-<label for="email">Email</label>
-<input type="email" id="email" required>
+    <label>Length:</label><br>
+    <input type="text" id="length"><br><br>
 
-<label for="service">Service</label>
-<select id="service" required>
-<option value="">Select a service</option>
-<option value="Gel Manicure">Gel Manicure</option>
-<option value="Regular Manicure">Regular Manicure</option>
-<option value="Acrylic Full Set">Acrylic Full Set</option>
-<option value="Acrylic Fill">Acrylic Fill</option>
-</select>
+    <label>Select Date:</label><br>
+    <input type="text" id="date" required><br><br>
 
-<div id="lengthField" class="hidden">
-<label for="length">Length</label>
-<select id="length">
-<option value="Short">Short</option>
-<option value="Medium">Medium</option>
-<option value="Long">Long</option>
-<option value="Extra Long">Extra Long</option>
-</select>
-</div>
+    <input type="hidden" id="time" value="12:00 PM">
 
-<label for="date">Date</label>
-<input type="text" id="date" placeholder="Select a date" required>
+    <button type="submit">Book</button>
+  </form>
 
-<label for="time">Time</label>
-<select id="time" required>
-<option value="12:00 PM">12:00 PM</option>
-</select>
+  <script>
+    const SCRIPT_URL = "YOUR_DEPLOYED_WEB_APP_URL"; // replace with your web app URL
 
-<button type="submit">Book Appointment</button>
-</form>
-
-<div class="note">
-After booking, please DM <b>@pixelnailz</b> on Instagram for the e-transfer email and to send your inspo pic 💖
-</div>
-</div>
-
-<footer>© 2025 PixelNailz</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script>
-const WEB_APP_URL = "YOUR_DEPLOYED_SCRIPT_URL"; // replace with your Apps Script Web App URL
-
-// Show length field only for Acrylic Full Set
-document.getElementById("service").addEventListener("change", function() {
-  const lengthField = document.getElementById("lengthField");
-  if(this.value === "Acrylic Full Set") lengthField.classList.remove("hidden");
-  else lengthField.classList.add("hidden");
-});
-
-// Allowed booking dates (edit as needed)
-const allowedDates = [
-  "2025-09-07",
-  "2025-09-13",
-  "2025-09-14",
-  "2025-09-20",
-  "2025-09-21",
-  "2025-09-27",
-  "2025-09-28"
-];
-
-// Fetch booked dates from Apps Script
-async function getBookedDates() {
-  try {
-    const response = await fetch(WEB_APP_URL + "?action=fetch");
-    const data = await response.json();
-    return data.booked || [];
-  } catch (e) {
-    console.error("Error fetching booked dates", e);
-    return [];
-  }
-}
-
-// Initialize booking calendar
-async function initBookingDatepicker() {
-  const bookedDates = await getBookedDates();
-
-  flatpickr("#date", {
-    dateFormat: "Y-m-d",
-    enable: allowedDates,   // only allow your chosen days
-    disable: bookedDates,   // grey out already booked ones
-    minDate: "today"
-  });
-}
-initBookingDatepicker();
-
-// Booking form submission
-document.getElementById("bookingForm").addEventListener("submit", async function(e){
-  e.preventDefault();
-  const bookingData = {
-    action:"book",
-    name: document.getElementById("name").value,
-    phone: document.getElementById("phone").value,
-    email: document.getElementById("email").value,
-    service: document.getElementById("service").value,
-    length: document.getElementById("service").value==="Acrylic Full Set"? document.getElementById("length").value:"N/A",
-    date: document.getElementById("date").value,
-    time: "12:00 PM"
-  };
-
-  try {
-    const res = await fetch(WEB_APP_URL, { method:"POST", body:JSON.stringify(bookingData) });
-    const data = await res.json();
-    alert(data.message);
-
-    if(data.status === "success") {
-      await initBookingDatepicker(); // refresh after booking
+    async function getBookedDates() {
+      const res = await fetch(`${SCRIPT_URL}?action=fetch`);
+      const data = await res.json();
+      return data.booked || [];
     }
-  } catch {
-    alert("Error booking appointment");
-  }
-});
-</script>
+
+    async function initBookingDatepicker() {
+      const bookedDates = await getBookedDates();
+
+      // All Sundays in September 2025 (you can adjust as needed)
+      const allowedDates = [
+        "2025-09-07", "2025-09-14", "2025-09-21", "2025-09-28"
+      ];
+
+      // Remove already booked dates
+      const freeDates = allowedDates.filter(d => !bookedDates.includes(d));
+
+      flatpickr("#date", {
+        dateFormat: "Y-m-d",
+        enable: freeDates
+      });
+    }
+
+    initBookingDatepicker();
+
+    document.getElementById("bookingForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const booking = {
+        action: "book",
+        name: document.getElementById("name").value,
+        phone: document.getElementById("phone").value,
+        email: document.getElementById("email").value,
+        service: document.getElementById("service").value,
+        length: document.getElementById("length").value,
+        date: document.getElementById("date").value,
+        time: document.getElementById("time").value
+      };
+
+      const res = await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify(booking)
+      });
+      const result = await res.json();
+      alert(result.message);
+
+      if (result.status === "success") {
+        location.reload(); // refresh so calendar updates
+      }
+    });
+  </script>
 </body>
 </html>
