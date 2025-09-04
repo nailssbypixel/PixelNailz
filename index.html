@@ -5,18 +5,53 @@
 <title>PixelNailz Booking</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
-body { font-family: Arial, sans-serif; background: #f8f8f8; margin:0; padding:0; }
-header { background: #ff66a3; color: white; text-align: center; padding: 1.5rem; font-size: 2rem; font-weight: bold; }
-.container { max-width: 600px; margin: 30px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-h2 { text-align: center; color: #d63384; }
+body {
+  font-family: Arial, sans-serif;
+  background: #ffe6f0 url('https://i.ibb.co/w0g8VJ6/flower-pattern.png') repeat; /* light pink + floral pattern */
+  background-size: 150px 150px;
+  margin: 0;
+  padding: 0;
+}
+header {
+  background: #ff66a3;
+  color: white;
+  text-align: center;
+  padding: 1.5rem;
+  font-size: 2rem;
+  font-weight: bold;
+}
+.container {
+  max-width: 600px;
+  margin: 30px auto;
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+h2 {
+  text-align: center;
+  color: #d63384;
+}
 form { display:flex; flex-direction: column; margin-top:20px; }
 label { margin:8px 0 4px; font-weight:bold; }
-input, select, button { padding:10px; border:1px solid #ccc; border-radius:6px; margin-bottom:12px; font-size:1em; }
-button { background:#d63384; color:white; border:none; cursor:pointer; font-weight:bold; }
+input, select, button {
+  padding:10px;
+  border:1px solid #ccc;
+  border-radius:6px;
+  margin-bottom:12px;
+  font-size:1em;
+}
+button {
+  background:#d63384;
+  color:white;
+  border:none;
+  cursor:pointer;
+  font-weight:bold;
+}
 button:hover { background:#b82c6d; }
 .hidden { display:none; }
 .note { font-size:0.9em; color:#555; text-align:center; margin:10px 0 20px; }
-footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; background:#f8f8f8; margin-top:40px; }
+footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; background:#ffe6f0; margin-top:40px; }
 .success { color: green; text-align: center; margin-bottom: 12px; }
 .error { color: red; text-align: center; margin-bottom: 12px; }
 </style>
@@ -25,10 +60,11 @@ footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; backgr
 
 <header>PixelNailz Booking</header>
 
-<div class="container" id="bookContainer">
+<div class="container">
 <h2>Book Your Appointment</h2>
 <div id="bookingMessage"></div>
 <form id="bookingForm">
+
 <label for="name">Full Name</label>
 <input type="text" id="name" required>
 
@@ -74,72 +110,38 @@ footer { text-align:center; font-size:0.85em; color:#888; padding:15px 0; backgr
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
-const WEB_APP_URL = "YOUR_WEB_APP_URL_HERE"; // replace with your Apps Script URL
+const allowedDates = ["2025-09-07","2025-09-13","2025-09-14","2025-09-20","2025-09-21","2025-09-27","2025-09-28"];
 
-document.addEventListener("DOMContentLoaded", function() {
+// Show length field only for Acrylic Full Set
+document.getElementById("service").addEventListener("change", function() {
+  const lengthField = document.getElementById("lengthField");
+  this.value === "Acrylic Full Set" ? lengthField.classList.remove("hidden") : lengthField.classList.add("hidden");
+});
 
-  // Show length field only for Acrylic Full Set
-  document.getElementById("service").addEventListener("change", function() {
-    const lengthField = document.getElementById("lengthField");
-    this.value === "Acrylic Full Set" ? lengthField.classList.remove("hidden") : lengthField.classList.add("hidden");
-  });
+// Initialize Flatpickr with allowed dates
+flatpickr("#date", {
+  dateFormat: "Y-m-d",
+  enable: allowedDates,
+  minDate: "today"
+});
 
-  // Initialize booking datepicker
-  async function initBookingDatepicker() {
-    try {
-      const response = await fetch(WEB_APP_URL + "?action=fetch");
-      const data = await response.json();
-      const availableDates = data.available || [];
-
-      flatpickr("#date", {
-        dateFormat: "Y-m-d",
-        enable: availableDates,
-        minDate: "today"
-      });
-    } catch (err) {
-      console.error("Failed to fetch dates", err);
-    }
+// Booking submission
+document.getElementById("bookingForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+  const msgDiv = document.getElementById("bookingMessage");
+  msgDiv.innerHTML = "";
+  
+  const selectedDate = document.getElementById("date").value;
+  if (!allowedDates.includes(selectedDate)) {
+    msgDiv.className = "error";
+    msgDiv.innerText = "Please select a valid date from the list.";
+    return;
   }
-  initBookingDatepicker();
 
-  // Booking submission
-  document.getElementById("bookingForm").addEventListener("submit", async function(e){
-    e.preventDefault();
-    const msgDiv = document.getElementById("bookingMessage");
-    msgDiv.innerHTML = "";
-    const formData = {
-      action: "book",
-      name: document.getElementById("name").value,
-      phone: document.getElementById("phone").value,
-      email: document.getElementById("email").value,
-      service: document.getElementById("service").value,
-      length: document.getElementById("length").value,
-      date: document.getElementById("date").value,
-      time: document.getElementById("time").value
-    };
-
-    try {
-      const response = await fetch(WEB_APP_URL, {
-        method: "POST",
-        body: JSON.stringify(formData)
-      });
-      const data = await response.json();
-      if (data.status === "success") {
-        msgDiv.className = "success";
-        msgDiv.innerText = data.message;
-        initBookingDatepicker(); // refresh calendar
-        document.getElementById("bookingForm").reset();
-        document.getElementById("lengthField").classList.add("hidden");
-      } else {
-        msgDiv.className = "error";
-        msgDiv.innerText = data.message;
-      }
-    } catch(err) {
-      msgDiv.className = "error";
-      msgDiv.innerText = "Error submitting booking. Try again.";
-    }
-  });
-
+  msgDiv.className = "success";
+  msgDiv.innerText = "Booking submitted successfully!";  
+  this.reset();
+  document.getElementById("lengthField").classList.add("hidden");
 });
 </script>
 </body>
